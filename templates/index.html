@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> SSB Coding Platform</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="navbar">
+<h2>🤖  SSB Coding Platform</h2>
+
+<div>
+{% if role == "admin" %}
+<a href="/admin"><button>Admin</button></a>
+{% endif %}
+<a href="/logout"><button>Logout</button></a>
+</div>
+</div>
+
+<div class="main">
+
+<div class="left-panel">
+<h2>{{ problem.title }}</h2>
+<p>{{ problem.description }}</p>
+
+<h3>Test Cases</h3>
+<ul>
+{% for t in problem.tests %}
+<li>Input: {{ t.input }} → Output: {{ t.output }}</li>
+{% endfor %}
+</ul>
+</div>
+
+<div class="right-panel">
+
+<textarea id="code"
+placeholder="Write Python program..."></textarea>
+
+<div>
+<button onclick="runCode()">▶ Run</button>
+<button onclick="executeCode()">⚡ Execute</button>
+<button onclick="submitCode()">🚀 Submit</button>
+
+
+</div>
+
+<h3>Output</h3>
+<div id="output" class="output-box"></div>
+
+</div>
+</div>
+
+<script>
+
+function send(path){
+fetch(path,{
+method:"POST",
+headers:{"Content-Type":"application/x-www-form-urlencoded"},
+body:"code="+encodeURIComponent(
+document.getElementById("code").value)
+})
+.then(r=>r.text())
+.then(d=>document.getElementById("output").innerHTML=d)
+}
+
+function runCode(){ send("/run") }
+function executeCode(){ send("/execute") }
+function submitCode(){ send("/submit") }
+
+function getHint(){
+fetch("/hint",{
+method:"POST",
+headers:{"Content-Type":"application/x-www-form-urlencoded"},
+body:"code="+encodeURIComponent(
+document.getElementById("code").value)
+})
+.then(r=>r.text())
+.then(d=>document.getElementById("output").innerHTML=d)
+}
+
+</script>
+
+</body>
+</html>

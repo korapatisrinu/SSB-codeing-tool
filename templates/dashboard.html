@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>Dashboard — SSB Coding Platform</title>
+<link rel="stylesheet" href="/static/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<!-- ================= NAVBAR ================= -->
+
+<div class="navbar">
+
+```
+<h2>🤖 SSB Coding Platform</h2>
+
+<div class="nav-actions">
+
+    <!-- Admin Button -->
+    {% if session.get('role') == "admin" %}
+    <a href="/admin">
+        <button class="logout-btn">Admin</button>
+    </a>
+    {% endif %}
+
+    <!-- Contest Link -->
+    <a href="/contest/1">
+        <button class="logout-btn">Contest</button>
+    </a>
+
+    <!-- Logout -->
+    <a href="/logout">
+        <button class="logout-btn">Logout</button>
+    </a>
+
+</div>
+```
+
+</div>
+
+<!-- ================= WELCOME ================= -->
+
+<div class="welcome-box">
+
+```
+<h3>Hi {{ session.get('user') }} 👋</h3>
+
+<p>Let's Prepare, Practice and Perform!</p>
+```
+
+</div>
+
+<!-- ================= STATS ================= -->
+
+<div class="stats">
+
+```
+<div class="card">
+    <h1>{{ problems|length }}</h1>
+    <p>Total Problems</p>
+</div>
+
+<div class="card green">
+    <h1>{{ solved or 0 }}</h1>
+    <p>Problems Solved</p>
+</div>
+
+<div class="card orange">
+    <h1>{{ pending or problems|length }}</h1>
+    <p>Pending</p>
+</div>
+
+<div class="card blue">
+    <h1>{{ performance or 0 }}%</h1>
+    <p>Performance</p>
+</div>
+```
+
+</div>
+
+<!-- ================= PRACTICE PROBLEMS ================= -->
+
+<div class="practice-box">
+
+```
+<h2>Practice Problems</h2>
+
+{% if problems %}
+
+    <ul class="problem-list">
+
+    {% for p in problems %}
+        <li class="problem-item">
+
+            <a href="/problem/{{ p[0] }}" class="problem-link">
+
+                <span class="problem-title">
+                    {{ p[1] }}
+                </span>
+
+                <span class="problem-arrow">
+                    ➜
+                </span>
+
+            </a>
+
+        </li>
+    {% endfor %}
+
+    </ul>
+
+{% else %}
+
+    <p>No problems available yet.</p>
+
+{% endif %}
+```
+
+</div>
+
+</body>
+</html>

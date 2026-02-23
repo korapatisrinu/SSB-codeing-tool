@@ -1,0 +1,18 @@
+<h2>🏆 Leaderboard</h2>
+
+<table border="1">
+<tr>
+<th>Rank</th>
+<th>User</th>
+<th>Score</th>
+</tr>
+
+{% for u in data %}
+<tr>
+<td>{{ loop.index }}</td>
+<td>{{ u[0] }}</td>
+<td>{{ u[1] }}</td>
+</tr>
+{% endfor %}
+
+</table>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CodeAI — Login</title>
+<link rel="stylesheet" href="/static/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+
+<div class="nav">
+
+    <!-- LOGO -->
+    <h2 class="logo">🤖 CodeAI</h2>
+
+    <div class="nav-links">
+        <a href="#">Courses</a>
+        <a href="#">Practice</a>
+        <a href="#">About</a>
+    </div>
+
+    <div class="nav-right">
+        <span>English</span>
+
+        <!-- Scroll to login -->
+        <a href="#loginBox">Login</a>
+
+        <button class="get-btn"
+            onclick="document.getElementById('loginBox').scrollIntoView({behavior:'smooth'})">
+            Get Started
+        </button>
+    </div>
+
+</div>
+
+<!-- ===== HERO SECTION ===== -->
+
+<div class="hero">
+
+    <!-- LEFT TEXT -->
+
+    <div class="hero-text">
+
+        <h1>Be Future-Proof</h1>
+
+        <p>
+            Master coding skills and build your career in tech
+        </p>
+
+        <button class="explore-btn"
+            onclick="document.getElementById('loginBox').scrollIntoView({behavior:'smooth'})">
+            Explore Problems
+        </button>
+
+    </div>
+
+
+    <!-- RIGHT LOGIN BOX -->
+
+    <div class="login-box" id="loginBox">
+
+        <h2>Login</h2>
+
+        <!-- ⭐ ERROR MESSAGE FROM FLASK -->
+        {% if error %}
+        <p style="color:red; font-weight:bold;">
+            {{ error }}
+        </p>
+        {% endif %}
+
+        <form method="POST">
+
+            <label>Username</label>
+            <input
+                name="username"
+                type="text"
+                placeholder="Enter username"
+                required
+                autocomplete="username"
+            >
+
+            <label>Password</label>
+            <input
+                name="password"
+                type="password"
+                placeholder="Enter password"
+                required
+                autocomplete="current-password"
+            >
+
+            <button type="submit" class="login-btn">
+                Login
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>

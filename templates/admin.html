@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel</title>
+<link rel="stylesheet" href="/static/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<div class="navbar">
+    <h2>👑 Admin Panel</h2>
+    <a href="/dashboard">
+        <button class="logout-btn">Back</button>
+    </a>
+</div>
+
+<div class="practice-box">
+
+{% if msg %}
+<p style="color:green; font-weight:bold;">
+    {{ msg }}
+</p>
+{% endif %}
+
+<h2>Add New User</h2>
+
+<form method="POST">
+    <input name="new_user" placeholder="Username" required>
+    <input name="new_pass" type="password" placeholder="Password" required>
+    <button type="submit">Add User</button>
+</form>
+
+<hr>
+
+<h2>Add New Problem</h2>
+
+<form method="POST">
+
+<input name="title" placeholder="Problem Title" required><br><br>
+
+<textarea name="description"
+placeholder="Problem Description"
+style="width:100%; height:120px;"
+required></textarea><br><br>
+
+<h3>Test Cases</h3>
+
+<label>Test Case 1</label><br>
+<textarea name="input1"
+placeholder="Input Example:
+2
+3"
+style="width:48%; height:70px;"></textarea>
+
+<textarea name="output1"
+placeholder="Output Example:
+5"
+style="width:48%; height:70px;"></textarea><br><br>
+
+<label>Test Case 2</label><br>
+<textarea name="input2" style="width:48%; height:70px;"></textarea>
+<textarea name="output2" style="width:48%; height:70px;"></textarea><br><br>
+
+<label>Test Case 3</label><br>
+<textarea name="input3" style="width:48%; height:70px;"></textarea>
+<textarea name="output3" style="width:48%; height:70px;"></textarea><br><br>
+
+<label>Test Case 4</label><br>
+<textarea name="input4" style="width:48%; height:70px;"></textarea>
+<textarea name="output4" style="width:48%; height:70px;"></textarea><br><br>
+
+<label>Test Case 5</label><br>
+<textarea name="input5" style="width:48%; height:70px;"></textarea>
+<textarea name="output5" style="width:48%; height:70px;"></textarea><br><br>
+
+<button type="submit">Add Problem</button>
+
+</form>
+
+<hr>
+
+<h2>All Users</h2>
+
+<ul>
+{% for u in users %}
+    <li>
+        {{ u[0] }} ({{ u[1] }})
+
+        {% if u[0] != "admin" %}
+        <a href="/delete_user/{{ u[0] }}"
+           onclick="return confirm('Delete this user?')">
+            <button style="background:red; color:white;">
+                Delete
+            </button>
+        </a>
+        {% endif %}
+    </li>
+{% endfor %}
+</ul>
+
+<hr>
+
+<h2>All Problems</h2>
+
+<ul>
+{% for p in problems %}
+    <li>
+        {{ p[1] }}
+
+        <a href="/delete_problem/{{ p[0] }}"
+           onclick="return confirm('Delete this problem?')">
+            <button style="background:red; color:white;">
+                Delete
+            </button>
+        </a>
+    </li>
+{% endfor %}
+</ul>
+
+</div>
+
+</body>
+</html>

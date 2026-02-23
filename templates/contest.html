@@ -1,0 +1,15 @@
+<h2>🏁 Contest Problems</h2>
+
+<ul>
+{% for p in problems %}
+<li>
+<a href="/problem/{{ p[0] }}">
+Problem {{ loop.index }} — {{ p[1] }}
+</a>
+</li>
+{% endfor %}
+</ul>
+
+<a href="/leaderboard/{{ cid }}">
+<button>View Leaderboard</button>
+</a>
