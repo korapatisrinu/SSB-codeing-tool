@@ -35,7 +35,7 @@
     </a>
 
 </div>
-```
+
 
 </div>
 
@@ -43,39 +43,35 @@
 
 <div class="welcome-box">
 
-```
 <h3>Hi {{ session.get('user') }} 👋</h3>
 
 <p>Let's Prepare, Practice and Perform!</p>
-```
+
 
 </div>
 
 <!-- ================= STATS ================= -->
-
 <div class="stats">
 
-```
-<div class="card">
-    <h1>{{ problems|length }}</h1>
-    <p>Total Problems</p>
-</div>
+    <div class="card">
+        <h1>{{ problems|length }}</h1>
+        <p>Total Problems</p>
+    </div>
 
-<div class="card green">
-    <h1>{{ solved or 0 }}</h1>
-    <p>Problems Solved</p>
-</div>
+    <div class="card green">
+        <h1>{{ solved }}</h1>
+        <p>Problems Solved</p>
+    </div>
 
-<div class="card orange">
-    <h1>{{ pending or problems|length }}</h1>
-    <p>Pending</p>
-</div>
+    <div class="card orange">
+        <h1>{{ pending }}</h1>
+        <p>Pending</p>
+    </div>
 
-<div class="card blue">
-    <h1>{{ performance or 0 }}%</h1>
-    <p>Performance</p>
-</div>
-```
+    <div class="card blue">
+        <h1>{{ performance }}%</h1>
+        <p>Performance</p>
+    </div>
 
 </div>
 

@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, session
 import sqlite3
 import subprocess
 import bcrypt
+import os
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -50,37 +51,11 @@ CREATE TABLE IF NOT EXISTS submissions(
     username TEXT,
     problem_id INTEGER,
     code TEXT,
+    language TEXT,
     verdict TEXT,
     passed INTEGER,
     total INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
-
-# CONTESTS
-c.execute("""
-CREATE TABLE IF NOT EXISTS contests(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT,
-    start_time TEXT,
-    end_time TEXT
-)
-""")
-
-# CONTEST PROBLEMS
-c.execute("""
-CREATE TABLE IF NOT EXISTS contest_problems(
-    contest_id INTEGER,
-    problem_id INTEGER
-)
-""")
-
-# SCORES
-c.execute("""
-CREATE TABLE IF NOT EXISTS scores(
-    contest_id INTEGER,
-    username TEXT,
-    score INTEGER DEFAULT 0
 )
 """)
 
@@ -96,8 +71,53 @@ c.execute(
     "INSERT OR IGNORE INTO users(username, password, role) VALUES(?,?,?)",
     ("admin", password, "admin")
 )
-
 conn.commit()
+
+# =========================================================
+# CODE EXECUTION FUNCTION (MULTI LANGUAGE)
+# =========================================================
+
+def run_code(language, code, input_data):
+
+    try:
+
+        if language == "python":
+            cmd = ["python", "-c", code]
+
+        elif language == "cpp":
+            with open("temp.cpp", "w") as f:
+                f.write(code)
+            subprocess.run(["g++", "temp.cpp", "-o", "temp"], check=True)
+            cmd = ["./temp"]
+
+        elif language == "java":
+            with open("Main.java", "w") as f:
+                f.write(code)
+            subprocess.run(["javac", "Main.java"], check=True)
+            cmd = ["java", "Main"]
+
+        elif language == "js":
+            cmd = ["node", "-e", code]
+
+        else:
+            return "", "Unsupported language"
+
+        result = subprocess.run(
+            cmd,
+            input=input_data,
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+
+        return result.stdout.strip(), result.stderr.strip()
+
+    except subprocess.TimeoutExpired:
+        return "", "Time Limit Exceeded"
+
+    except Exception as e:
+        return "", str(e)
+
 
 # =========================================================
 # LOGIN
@@ -123,6 +143,7 @@ def login():
 
     return render_template("login.html")
 
+
 # =========================================================
 # DASHBOARD
 # =========================================================
@@ -132,26 +153,31 @@ def dashboard():
     if "user" not in session:
         return redirect("/")
 
-    # All problems
-    c.execute("SELECT id, title FROM problems")
-    problems = c.fetchall()
+    # Total problems
+    c.execute("SELECT COUNT(*) FROM problems")
+    total = c.fetchone()[0]
 
-    total = len(problems)
-
-    # Solved problems (unique + only existing)
+    # Solved problems (distinct accepted)
     c.execute("""
-        SELECT COUNT(DISTINCT s.problem_id)
-        FROM submissions s
-        INNER JOIN problems p
-        ON s.problem_id = p.id
-        WHERE s.username=? AND s.verdict='Accepted'
+        SELECT COUNT(DISTINCT problem_id)
+        FROM submissions
+        WHERE username = ?
+        AND verdict = 'Accepted'
     """, (session["user"],))
 
     solved = c.fetchone()[0] or 0
 
-    pending = max(total - solved, 0)
+    pending = total - solved
+    if pending < 0:
+        pending = 0
 
     performance = int((solved / total) * 100) if total > 0 else 0
+
+    # Get problem list
+    c.execute("SELECT id, title FROM problems")
+    problems = c.fetchall()
+
+    print("DEBUG -> Total:", total, "Solved:", solved, "Pending:", pending)
 
     return render_template(
         "dashboard.html",
@@ -160,52 +186,6 @@ def dashboard():
         pending=pending,
         performance=performance
     )
-
-# =========================================================
-# CONTEST LIST
-# =========================================================
-
-@app.route("/contests")
-def contests():
-
-    if "user" not in session:
-        return redirect("/")
-
-    c.execute("SELECT * FROM contests")
-    all_contests = c.fetchall()
-
-    return render_template("contests.html", contests=all_contests)
-
-# =========================================================
-# CONTEST PAGE
-# =========================================================
-
-@app.route("/contest/<int:cid>")
-def contest(cid):
-
-    if "user" not in session:
-        return redirect("/")
-
-    c.execute("SELECT * FROM contests WHERE id=?", (cid,))
-    contest = c.fetchone()
-
-    if not contest:
-        return "Contest Not Found"
-
-    c.execute("""
-        SELECT p.id, p.title
-        FROM problems p
-        JOIN contest_problems cp
-        ON p.id = cp.problem_id
-        WHERE cp.contest_id=?
-    """, (cid,))
-
-    problems = c.fetchall()
-
-    return render_template("contest.html",
-                           contest=contest,
-                           problems=problems)
-
 # =========================================================
 # ADMIN PANEL
 # =========================================================
@@ -262,15 +242,12 @@ def admin():
     c.execute("SELECT * FROM problems")
     problems = c.fetchall()
 
-    return render_template("admin.html",
-                           users=users,
-                           problems=problems,
-                           msg=msg)
-
-# =========================================================
-# DELETE PROBLEM (FULL CLEAN)
-# =========================================================
-
+    return render_template(
+        "admin.html",
+        users=users,
+        problems=problems,
+        msg=msg
+    )
 @app.route("/delete_problem/<int:pid>")
 def delete_problem(pid):
 
@@ -280,12 +257,9 @@ def delete_problem(pid):
     c.execute("DELETE FROM problems WHERE id=?", (pid,))
     c.execute("DELETE FROM testcases WHERE problem_id=?", (pid,))
     c.execute("DELETE FROM submissions WHERE problem_id=?", (pid,))
-    c.execute("DELETE FROM contest_problems WHERE problem_id=?", (pid,))
-
     conn.commit()
 
     return redirect("/admin")
-
 # =========================================================
 # PROBLEM PAGE
 # =========================================================
@@ -304,6 +278,7 @@ def problem(pid):
 
     return render_template("problem.html", problem=problem)
 
+
 # =========================================================
 # RUN — CUSTOM INPUT
 # =========================================================
@@ -313,24 +288,22 @@ def run():
 
     code = request.form["code"]
     stdin_data = request.form.get("stdin", "")
+    language = request.form.get("language", "python")
 
-    result = subprocess.run(
-        ["python", "-c", code],
-        input=stdin_data,
-        capture_output=True,
-        text=True,
-        timeout=3
-    )
+    output, error = run_code(language, code, stdin_data)
 
-    return result.stdout or result.stderr
+    return output or error
+
 
 # =========================================================
 # EXECUTE — SAMPLE TESTS
 # =========================================================
+
 @app.route("/execute/<int:pid>", methods=["POST"])
 def execute(pid):
 
     code = request.form["code"]
+    language = request.form.get("language", "python")
 
     c.execute(
         "SELECT input, output FROM testcases WHERE problem_id=? AND hidden=0",
@@ -346,17 +319,9 @@ def execute(pid):
         if not clean_input.endswith("\n"):
             clean_input += "\n"
 
-        result = subprocess.run(
-            ["python", "-c", code],
-            input=clean_input,
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
+        output, error = run_code(language, code, clean_input)
 
-        output = result.stdout.strip()
-
-        if output == expected.strip():
+        if output.strip() == expected.strip():
             results += f"Test Case {i}: ✔ Passed\n"
         else:
             results += (
@@ -366,6 +331,7 @@ def execute(pid):
             )
 
     return results
+
 
 # =========================================================
 # SUBMIT — FINAL JUDGE
@@ -378,8 +344,8 @@ def submit(pid):
         return "Login required"
 
     code = request.form["code"]
+    language = request.form.get("language", "python")
 
-    # Get test cases
     c.execute(
         "SELECT input, output FROM testcases WHERE problem_id=?",
         (pid,)
@@ -395,39 +361,29 @@ def submit(pid):
         if not clean_input.endswith("\n"):
             clean_input += "\n"
 
-        result = subprocess.run(
-            ["python", "-c", code],
-            input=clean_input,
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
+        output, error = run_code(language, code, clean_input)
 
-        output = result.stdout.strip()
-
-        if output == expected.strip():
+        if output.strip() == expected.strip():
             passed += 1
 
     verdict = "Accepted" if passed == total else "Wrong Answer"
 
-    # Save submission
     c.execute("""
-        INSERT INTO submissions(username, problem_id, code, verdict, passed, total)
-        VALUES(?,?,?,?,?,?)
-    """, (session["user"], pid, code, verdict, passed, total))
+        INSERT INTO submissions(username, problem_id, code, language, verdict, passed, total)
+        VALUES(?,?,?,?,?,?,?)
+    """, (session["user"], pid, code, language, verdict, passed, total))
+
     conn.commit()
 
-    # Find next problem
     c.execute(
         "SELECT id FROM problems WHERE id > ? ORDER BY id ASC LIMIT 1",
         (pid,)
     )
     next_problem = c.fetchone()
-
     next_id = next_problem[0] if next_problem else "None"
 
-    # Return data to JS
     return f"{verdict}|{passed}|{total}|{next_id}"
+
 
 # =========================================================
 # LOGOUT
@@ -437,6 +393,7 @@ def submit(pid):
 def logout():
     session.clear()
     return redirect("/")
+
 
 # =========================================================
 

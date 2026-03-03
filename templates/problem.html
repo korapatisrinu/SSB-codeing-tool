@@ -7,69 +7,60 @@
 </head>
 <body>
 
-<!-- ===== TOP BAR ===== -->
-
 <div class="navbar">
     <h2>{{ problem[1] }}</h2>
-
     <a href="/dashboard">
         <button class="logout-btn" type="button">Back</button>
     </a>
 </div>
 
-<!-- ===== MAIN LAYOUT ===== -->
-
 <div class="main">
 
-    <!-- ===== LEFT PANEL ===== -->
+    <!-- LEFT PANEL -->
 
     <div class="left-panel">
 
         <h2>Problem</h2>
 
-        <p>{{ problem[2] }}</p>
+        <!-- ✅ This preserves formatting -->
+        <div style="white-space: pre-wrap;">
+            {{ problem[2] }}
+        </div>
 
     </div>
 
-    <!-- ===== RIGHT PANEL ===== -->
+    <!-- RIGHT PANEL -->
 
     <div class="right-panel">
 
         <h3>💻 Code Editor</h3>
 
-        <textarea id="code" placeholder="Write Python code here..."></textarea>
+        <label><strong>Select Language:</strong></label>
+        <select id="language">
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+        </select>
 
-        <!-- CUSTOM INPUT -->
+        <textarea id="code" placeholder="Write your code here..."></textarea>
 
         <button type="button" onclick="toggleInput()">
             Custom Input
         </button>
 
         <div id="inputBox" style="display:none; margin-top:10px;">
-
             <h4>Input (for Run)</h4>
-
             <textarea id="stdin"
             placeholder="Example:
 2
 3"
             style="width:100%; height:100px;"></textarea>
-
         </div>
-
-        <!-- BUTTONS -->
 
         <div class="buttons">
-
             <button type="button" onclick="runCode()">▶ Run</button>
-
             <button type="button" onclick="executeCode()">⚡ Execute</button>
-
             <button type="button" onclick="submitCode()">🚀 Submit</button>
-
         </div>
-
-        <!-- OUTPUT -->
 
         <h3>Output</h3>
 
@@ -81,22 +72,17 @@
 
 </div>
 
-<!-- ===== JAVASCRIPT ===== -->
-
 <script>
 
-// Toggle input box
 function toggleInput(){
     const box = document.getElementById("inputBox");
     box.style.display = (box.style.display === "none") ? "block" : "none";
 }
 
-// ================= RUN =================
-
 function runCode(){
-
     const code = document.getElementById("code").value;
     const stdin = document.getElementById("stdin").value;
+    const language = document.getElementById("language").value;
 
     document.getElementById("output").value = "Running...";
 
@@ -106,49 +92,47 @@ function runCode(){
         body:
             "code=" + encodeURIComponent(code)
             + "&stdin=" + encodeURIComponent(stdin)
+            + "&language=" + encodeURIComponent(language)
     })
     .then(r => r.text())
     .then(d => document.getElementById("output").value = d)
     .catch(err => document.getElementById("output").value = err);
 }
 
-// ================= EXECUTE =================
-
 function executeCode(){
-
     const code = document.getElementById("code").value;
+    const language = document.getElementById("language").value;
 
     document.getElementById("output").value = "Executing test cases...";
 
     fetch("/execute/{{ problem[0] }}", {
         method:"POST",
         headers: {"Content-Type":"application/x-www-form-urlencoded"},
-        body: "code=" + encodeURIComponent(code)
+        body:
+            "code=" + encodeURIComponent(code)
+            + "&language=" + encodeURIComponent(language)
     })
     .then(r=>r.text())
     .then(d=>document.getElementById("output").value = d)
     .catch(err=>document.getElementById("output").value = err);
 }
 
-// ================= SUBMIT =================
-
 function submitCode() {
-
     const code = document.getElementById("code").value;
+    const language = document.getElementById("language").value;
 
     document.getElementById("output").value = "Submitting...";
 
     fetch("/submit/{{ problem[0] }}", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: "code=" + encodeURIComponent(code)
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body:
+            "code=" + encodeURIComponent(code)
+            + "&language=" + encodeURIComponent(language)
     })
     .then(response => response.text())
     .then(data => {
 
-        // Format: verdict|passed|total|next_id
         const parts = data.split("|");
 
         const verdict = parts[0];
@@ -156,15 +140,12 @@ function submitCode() {
         const total = parts[2];
         const nextId = parts[3];
 
-        const message = verdict + " — " + passed + "/" + total + " Passed";
+        document.getElementById("output").value =
+            verdict + " — " + passed + "/" + total + " Passed";
 
-        document.getElementById("output").value = message;
-
-        // Remove old NEXT button if exists
         const oldBtn = document.getElementById("nextBtn");
         if (oldBtn) oldBtn.remove();
 
-        // ⭐ Show NEXT button ONLY if Accepted
         if (verdict === "Accepted" && nextId && nextId !== "None") {
 
             const nextBtn = document.createElement("button");
