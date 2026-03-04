@@ -1,98 +1,194 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>SSB Training And Placement Pvt Ltd</title>
 
 <link rel="icon" type="image/png" href="static/media/logo.jpeg">
 
-<link rel="stylesheet" href="/static/style.css">
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+    background: linear-gradient(135deg,#1e2a78,#4a6cf7);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Navbar */
+.navbar{
+    background: linear-gradient(90deg,#0f2027,#203a43,#2c5364);
+}
+
+/* Hero Section */
+.hero-section{
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+}
+
+/* Login Card */
+.login-card{
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Buttons */
+.btn-custom{
+    background: #4a6cf7;
+    color: white;
+    font-weight: 600;
+}
+
+.btn-custom:hover{
+    background: #2c5364;
+}
+</style>
 </head>
+
 <body>
 
-<!-- ===== NAVBAR ===== -->
+<!-- ================= NAVBAR ================= -->
 
-<div class="nav">
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+    <div class="container">
 
-    <!-- LOGO -->
-    <a href="index.html">
-        <img src="static/media/logo.jpeg" alt="Logo" width="90" />
-    </a>
-    <h2 class="logo">SSB Training And Placement Pvt Ltd </h2>
+        <div class="d-flex align-items-center">
 
-   <div class="nav-links">
-    <a href="#" class="nav-btn">Courses</a>
-    <a href="#" class="nav-btn">Practice</a>
-    <a href="#" class="nav-btn">About</a>
-</div>
+            <a href="#" class="me-3">
+                <img src="static/media/logo.jpeg" width="70" class="img-fluid rounded">
+            </a>
 
- 
+            <span class="navbar-brand fw-bold">
+                SSB Training And Placement Pvt Ltd
+            </span>
 
-        <!-- Scroll to login -->
-        <a href="#loginBox" class="login-btn">Login</a>
+        </div>
 
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-</div>
+        <div class="collapse navbar-collapse justify-content-end" id="navMenu">
 
-<!-- ===== HERO SECTION ===== -->
+            <ul class="navbar-nav me-3">
+                <li class="nav-item"><a class="nav-link" href="#">Courses</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Practice</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">About</a></li>
+            </ul>
 
-<div class="hero">
+            <a href="#loginBox" class="btn btn-warning btn-sm">
+                Login
+            </a>
 
-    <!-- LEFT TEXT -->
-
-    <div class="hero-text">
-
-        <h1>Be Future-Proof</h1>
-
-        <p>
-            Master coding skills and build your career in tech
-        </p>
+        </div>
 
     </div>
+</nav>
 
 
-   <!-- RIGHT LOGIN BOX -->
+<!-- ================= HERO SECTION ================= -->
 
-    <div class="login-box" id="loginBox">
+<div class="container hero-section">
 
-        <h2>Login</h2>
+    <div class="row w-100 align-items-center">
 
-        <!-- ⭐ ERROR MESSAGE FROM FLASK -->
-        {% if error %}
-        <p style="color:red; font-weight:bold;">
-            {{ error }}
-        </p>
-        {% endif %}
+        <!-- LEFT TEXT -->
+        <div class="col-lg-6 text-white mb-5 mb-lg-0">
 
-        <form method="POST">
+            <h1 class="display-4 fw-bold">
+                Be Future-Proof 🚀
+            </h1>
 
-            <label>Username</label>
-            <input
-                name="username"
-                type="text"
-                placeholder="Enter username"
-                required
-                autocomplete="username"
-            >
+            <p class="lead">
+                Master coding skills and build your career in tech.
+                Learn • Practice • Get Placed
+            </p>
 
-            <label>Password</label>
-            <input
-                name="password"
-                type="password"
-                placeholder="Enter password"
-                required
-                autocomplete="current-password"
-            >
-
-            <button type="submit" class="login-btn">
-                Login
+            <button class="btn btn-light btn-lg mt-3">
+                Explore Courses
             </button>
 
-        </form>
+        </div>
+
+
+        <!-- RIGHT LOGIN BOX WITH TABS -->
+        <div class="col-lg-5 offset-lg-1">
+
+            <div class="card login-card p-4" id="loginBox">
+
+                <!-- Tabs -->
+                <ul class="nav nav-tabs mb-3">
+                    <li class="nav-item">
+                        <button class="nav-link active"
+                                data-bs-toggle="tab"
+                                data-bs-target="#loginTab">
+                            Login
+                        </button>
+                    </li>
+
+                    
+                </ul>
+
+                <div class="tab-content">
+
+                    <!-- LOGIN TAB -->
+                    <div class="tab-pane fade show active" id="loginTab">
+
+                        {% if error %}
+                        <div class="alert alert-danger">
+                            {{ error }}
+                        </div>
+                        {% endif %}
+
+                        <form method="POST">
+
+                            <div class="mb-3">
+                                <label class="form-label">Username</label>
+                                <input name="username"
+                                       type="text"
+                                       class="form-control"
+                                       placeholder="Enter username"
+                                       required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                <input name="password"
+                                       type="password"
+                                       class="form-control"
+                                       placeholder="Enter password"
+                                       required>
+                            </div>
+
+                            <button type="submit"
+                                    class="btn btn-custom w-100">
+                                Login
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                    
+
+                </div>
+
+            </div>
+
+        </div>
 
     </div>
 
 </div>
+
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

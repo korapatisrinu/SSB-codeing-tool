@@ -10,8 +10,12 @@
 <div class="navbar">
     <h2>{{ problem[1] }}</h2>
     <a href="/dashboard">
+        
         <button class="logout-btn" type="button">Back</button>
     </a>
+</div>
+<div class="nav-actions">
+    <button onclick="toggleTheme()">🌙 / ☀</button>
 </div>
 
 <div class="main">
@@ -31,17 +35,30 @@
 
     <!-- RIGHT PANEL -->
 
-    <div class="right-panel">
+  <div class="right-panel">
 
+    <!-- 🔹 Code Editor Header + Language Dropdown -->
+    <div style="display:flex; justify-content:space-between; align-items:center;">
         <h3>💻 Code Editor</h3>
 
-        <label><strong>Select Language:</strong></label>
-        <select id="language">
-            <option value="python">Python</option>
-            <option value="java">Java</option>
+        <select id="language" onchange="changeTemplate()" style="padding:6px;">
+            <option value="python">Python 3</option>
+            <option value="java">Java 17</option>
         </select>
+    </div>
 
-        <textarea id="code" placeholder="Write your code here..."></textarea>
+    <!-- 🔹 Code Area -->
+    <textarea id="code" style="
+        width:100%;
+        height:400px;
+        background:#1e1e1e;
+        color:white;
+        font-family:monospace;
+        padding:15px;
+        border:none;
+        outline:none;
+        resize:none;">
+    </textarea>
 
         <button type="button" onclick="toggleInput()">
             Custom Input
@@ -72,6 +89,9 @@
 
 </div>
 
+
+
+<!-- <! SCRIPT> -->
 <script>
 
 function toggleInput(){
@@ -90,9 +110,10 @@ function runCode(){
         method: "POST",
         headers: {"Content-Type":"application/x-www-form-urlencoded"},
         body:
-            "code=" + encodeURIComponent(code)
-            + "&stdin=" + encodeURIComponent(stdin)
-            + "&language=" + encodeURIComponent(language)
+    "code=" + encodeURIComponent(code)
+    + "&stdin=" + encodeURIComponent(stdin)
+    + "&language=" + encodeURIComponent(language)
+    + "&pid={{ problem[0] }}"
     })
     .then(r => r.text())
     .then(d => document.getElementById("output").value = d)
@@ -167,6 +188,63 @@ function submitCode() {
         document.getElementById("output").value = "Error: " + error;
     });
 }
+
+function changeTemplate() {
+
+    const lang = document.getElementById("language").value;
+    const code = document.getElementById("code");
+
+    if (lang === "python") {
+        code.value =
+`# Enter your code here. Read input from STDIN. Print output to STDOUT
+
+# Write your logic here
+`;
+    }
+
+    else if (lang === "java") {
+        code.value =
+`import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Write your logic here
+    
+    }
+}`;
+    }
+}
+
+window.onload = changeTemplate;
+function toggleTheme() {
+    const body = document.body;
+
+    body.classList.toggle("dark");
+
+    if (body.classList.contains("dark")) {
+        localStorage.setItem("theme", "dark");
+    } else {
+        localStorage.setItem("theme", "light");
+    }
+}
+
+// Load saved theme when page opens
+window.onload = function() {
+
+    const savedTheme = localStorage.getItem("theme");
+
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+    }
+
+    if (typeof changeTemplate === "function") {
+        changeTemplate();
+    }
+};
+
+
 
 </script>
 

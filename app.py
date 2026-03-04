@@ -153,31 +153,35 @@ def dashboard():
     if "user" not in session:
         return redirect("/")
 
-    # Total problems
-    c.execute("SELECT COUNT(*) FROM problems")
-    total = c.fetchone()[0]
+    username = session["user"]
 
-    # Solved problems (distinct accepted)
-    c.execute("""
-        SELECT COUNT(DISTINCT problem_id)
-        FROM submissions
-        WHERE username = ?
-        AND verdict = 'Accepted'
-    """, (session["user"],))
+    import sqlite3
+    conn = sqlite3.connect("platform.db")
+    c = conn.cursor()
 
-    solved = c.fetchone()[0] or 0
-
-    pending = total - solved
-    if pending < 0:
-        pending = 0
-
-    performance = int((solved / total) * 100) if total > 0 else 0
-
-    # Get problem list
+    # Get all problems
     c.execute("SELECT id, title FROM problems")
     problems = c.fetchall()
 
-    print("DEBUG -> Total:", total, "Solved:", solved, "Pending:", pending)
+    total_problems = len(problems)
+
+    # Get solved problem IDs (Accepted only)
+    c.execute("""
+        SELECT DISTINCT problem_id
+        FROM submissions
+        WHERE username = ? AND verdict = 'Accepted'
+    """, (username,))
+
+    solved_ids = {row[0] for row in c.fetchall()}
+
+    # Count solved problems that actually exist
+    solved = sum(1 for p in problems if p[0] in solved_ids)
+
+    pending = total_problems - solved
+
+    performance = int((solved / total_problems) * 100) if total_problems > 0 else 0
+
+    conn.close()
 
     return render_template(
         "dashboard.html",
@@ -187,34 +191,90 @@ def dashboard():
         performance=performance
     )
 # =========================================================
-# ADMIN PANEL
+# contest
 # =========================================================
 
+@app.route("/contest/<int:cid>")
+def contest(cid):
+
+    if "user" not in session:
+        return redirect("/")
+
+    conn = sqlite3.connect("platform.db")
+    c = conn.cursor()
+
+    # For now just show all problems (basic contest page)
+    c.execute("SELECT id, title FROM problems")
+    problems = c.fetchall()
+
+    conn.close()
+
+    return render_template("contest.html", problems=problems, cid=cid)
+# =========================================================
+# Leaderboard
+# =========================================================
+@app.route("/leaderboard/<int:cid>")
+def leaderboard(cid):
+
+    if "user" not in session:
+        return redirect("/")
+
+    conn = sqlite3.connect("platform.db")
+    c = conn.cursor()
+
+    # ✅ NEW CORRECT QUERY
+    c.execute("""
+        SELECT u.username, COUNT(DISTINCT s.problem_id) as solved_count
+        FROM users u
+        LEFT JOIN submissions s
+            ON u.username = s.username
+            AND s.verdict = 'Accepted'
+        GROUP BY u.username
+        ORDER BY solved_count DESC
+    """)
+
+    rankings = c.fetchall()
+    conn.close()
+
+    return render_template("leaderboard.html", rankings=rankings, cid=cid)
+# =========================================================
+# ADMIN PANEL
+# =========================================================
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
 
     if session.get("role") != "admin":
         return "Access Denied"
 
+    conn = sqlite3.connect("platform.db")
+    c = conn.cursor()
+
     msg = ""
 
-    # ADD USER
-    if "new_user" in request.form:
+    # ================= ADD USER =================
+    if request.method == "POST" and "new_user" in request.form:
+
+        username = request.form["new_user"]
+        password = request.form["new_pass"]
+        role = request.form.get("role", "user")  # allow role selection
 
         hashed_pw = bcrypt.hashpw(
-            request.form["new_pass"].encode(),
+            password.encode(),
             bcrypt.gensalt()
         )
 
-        c.execute(
-            "INSERT INTO users(username, password, role) VALUES(?,?,?)",
-            (request.form["new_user"], hashed_pw, "user")
-        )
-        conn.commit()
-        msg = "User added successfully"
+        try:
+            c.execute(
+                "INSERT INTO users(username, password, role) VALUES(?,?,?)",
+                (username, hashed_pw, role)
+            )
+            conn.commit()
+            msg = "User added successfully"
+        except:
+            msg = "Username already exists"
 
-    # ADD PROBLEM
-    if "title" in request.form:
+    # ================= ADD PROBLEM =================
+    if request.method == "POST" and "title" in request.form:
 
         c.execute(
             "INSERT INTO problems(title, description) VALUES(?,?)",
@@ -236,11 +296,14 @@ def admin():
         conn.commit()
         msg = "Problem added successfully"
 
+    # ================= FETCH DATA =================
     c.execute("SELECT username, role FROM users")
     users = c.fetchall()
 
     c.execute("SELECT * FROM problems")
     problems = c.fetchall()
+
+    conn.close()
 
     return render_template(
         "admin.html",
@@ -248,16 +311,41 @@ def admin():
         problems=problems,
         msg=msg
     )
+# deleting promble
 @app.route("/delete_problem/<int:pid>")
 def delete_problem(pid):
 
     if session.get("role") != "admin":
         return "Access Denied"
 
+    conn, c = get_db()
+
     c.execute("DELETE FROM problems WHERE id=?", (pid,))
     c.execute("DELETE FROM testcases WHERE problem_id=?", (pid,))
     c.execute("DELETE FROM submissions WHERE problem_id=?", (pid,))
+
     conn.commit()
+    conn.close()
+
+    return redirect("/admin")
+# deleting user 
+@app.route("/delete_user/<username>")
+def delete_user(username):
+
+    if session.get("role") != "admin":
+        return "Access Denied"
+
+    conn = sqlite3.connect("platform.db")
+    c = conn.cursor()
+
+    # Delete user's submissions first
+    c.execute("DELETE FROM submissions WHERE username=?", (username,))
+
+    # Then delete user
+    c.execute("DELETE FROM users WHERE username=?", (username,))
+
+    conn.commit()
+    conn.close()
 
     return redirect("/admin")
 # =========================================================
@@ -282,18 +370,37 @@ def problem(pid):
 # =========================================================
 # RUN — CUSTOM INPUT
 # =========================================================
-
 @app.route("/run", methods=["POST"])
 def run():
 
     code = request.form["code"]
-    stdin_data = request.form.get("stdin", "")
-    language = request.form.get("language", "python")
+    language = request.form["language"]
+    stdin = request.form.get("stdin", "").strip()
+    pid = request.form.get("pid")
 
-    output, error = run_code(language, code, stdin_data)
+    if stdin == "" and pid:
 
-    return output or error
+        c.execute("""
+            SELECT input FROM testcases
+            WHERE problem_id=? AND hidden=0
+            ORDER BY id ASC
+            LIMIT 1
+        """, (pid,))
 
+        row = c.fetchone()
+
+        if row:
+            stdin = row[0]
+
+    # 🔥 IMPORTANT FIX HERE
+    stdin = stdin.replace("\r\n", "\n").strip() + "\n"
+
+    output, error = run_code(language, code, stdin)
+
+    if error:
+        return error
+
+    return output
 
 # =========================================================
 # EXECUTE — SAMPLE TESTS
@@ -336,12 +443,15 @@ def execute(pid):
 # =========================================================
 # SUBMIT — FINAL JUDGE
 # =========================================================
-
 @app.route("/submit/<int:pid>", methods=["POST"])
 def submit(pid):
 
     if "user" not in session:
         return "Login required"
+
+    import sqlite3
+    conn = sqlite3.connect("platform.db")
+    c = conn.cursor()
 
     code = request.form["code"]
     language = request.form.get("language", "python")
@@ -375,6 +485,7 @@ def submit(pid):
 
     conn.commit()
 
+    # Get next problem
     c.execute(
         "SELECT id FROM problems WHERE id > ? ORDER BY id ASC LIMIT 1",
         (pid,)
@@ -382,8 +493,9 @@ def submit(pid):
     next_problem = c.fetchone()
     next_id = next_problem[0] if next_problem else "None"
 
-    return f"{verdict}|{passed}|{total}|{next_id}"
+    conn.close()
 
+    return f"{verdict}|{passed}|{total}|{next_id}"
 
 # =========================================================
 # LOGOUT

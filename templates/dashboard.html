@@ -1,119 +1,242 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
-<title>Dashboard — SSB Coding Platform</title>
-<link rel="stylesheet" href="/static/style.css">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Dashboard — SSB Coding Platform</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body{
+            background: linear-gradient(135deg,#1e2a78,#4a6cf7);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .navbar{
+            background: #1c1c3c;
+        }
+
+        .dashboard-container{
+            margin-top: 30px;
+        }
+
+        .card{
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+        }
+
+        .stat-card h1{
+            font-weight: bold;
+        }
+
+        .nav-tabs .nav-link{
+            font-weight: 600;
+        }
+
+        .problem-item{
+            transition: 0.3s;
+        }
+
+        .problem-item:hover{
+            background: #f1f3ff;
+            transform: translateX(5px);
+        }
+    </style>
 </head>
+
 <body>
 
 <!-- ================= NAVBAR ================= -->
 
-<div class="navbar">
+<!-- ================= NAVBAR ================= -->
 
-```
-<h2>🤖 SSB Coding Platform</h2>
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+    <div class="container">
 
-<div class="nav-actions">
+        <!-- LEFT SIDE (Logo + Company Name + Tagline) -->
+        <div class="d-flex align-items-center">
 
-    <!-- Admin Button -->
-    {% if session.get('role') == "admin" %}
-    <a href="/admin">
-        <button class="logout-btn">Admin</button>
-    </a>
-    {% endif %}
-
-    <!-- Contest Link -->
-    <a href="/contest/1">
-        <button class="logout-btn">Contest</button>
-    </a>
-
-    <!-- Logout -->
-    <a href="/logout">
-        <button class="logout-btn">Logout</button>
-    </a>
-
-</div>
-
-
-</div>
-
-<!-- ================= WELCOME ================= -->
-
-<div class="welcome-box">
-
-<h3>Hi {{ session.get('user') }} 👋</h3>
-
-<p>Let's Prepare, Practice and Perform!</p>
-
-
-</div>
-
-<!-- ================= STATS ================= -->
-<div class="stats">
-
-    <div class="card">
-        <h1>{{ problems|length }}</h1>
-        <p>Total Problems</p>
-    </div>
-
-    <div class="card green">
-        <h1>{{ solved }}</h1>
-        <p>Problems Solved</p>
-    </div>
-
-    <div class="card orange">
-        <h1>{{ pending }}</h1>
-        <p>Pending</p>
-    </div>
-
-    <div class="card blue">
-        <h1>{{ performance }}%</h1>
-        <p>Performance</p>
-    </div>
-
-</div>
-
-<!-- ================= PRACTICE PROBLEMS ================= -->
-
-<div class="practice-box">
-
-```
-<h2>Practice Problems</h2>
-
-{% if problems %}
-
-    <ul class="problem-list">
-
-    {% for p in problems %}
-        <li class="problem-item">
-
-            <a href="/problem/{{ p[0] }}" class="problem-link">
-
-                <span class="problem-title">
-                    {{ p[1] }}
-                </span>
-
-                <span class="problem-arrow">
-                    ➜
-                </span>
-
+            <!-- Logo -->
+            <a href="#" class="me-3">
+                <img src="static/media/logo.jpeg"
+                     alt="Logo"
+                     width="70"
+                     class="img-fluid rounded">
             </a>
 
+            <!-- Company Name -->
+            <div class="me-4">
+                <span class="navbar-brand mb-0 h5 fw-bold">
+                    SSB Training And Placement Pvt Ltd
+                </span>
+            </div>
+
+            <!-- Extra Text -->
+            <!-- <div class="d-none d-md-block">
+                <small class="text-info fw-semibold">
+                    Empowering Future Developers 🚀
+                </small>
+            </div> -->
+
+        </div>
+
+        <!-- TOGGLER -->
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- RIGHT SIDE BUTTONS -->
+        <div class="collapse navbar-collapse justify-content-end" id="navMenu">
+            <div class="d-flex gap-2 mt-3 mt-lg-0">
+
+                {% if session.get('role') == "admin" %}
+                <a href="/admin" class="btn btn-warning btn-sm">
+                    <i class="bi bi-gear"></i> Admin
+                </a>
+                {% endif %}
+
+                <a href="/contest/1" class="btn btn-info btn-sm text-white">
+                    <i class="bi bi-trophy"></i> Contest
+                </a>
+
+                <a href="/logout" class="btn btn-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+
+            </div>
+        </div>
+
+    </div>
+</nav>
+
+<div class="container dashboard-container">
+
+    <!-- Welcome -->
+    <div class="card p-4 mb-4 text-center">
+        <h4>Hi {{ session.get('user') }} 👋</h4>
+        <p class="text-muted">Let's Prepare, Practice and Perform!</p>
+    </div>
+
+
+   <!-- Stats Row -->
+<div class="row g-4 mb-4">
+
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card p-3 text-center">
+            <h1>{{ problems|length }}</h1>
+            <p>Total Problems</p>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card p-3 text-center bg-success text-white">
+            <h1>{{ solved }}</h1>
+            <p>Problems Solved</p>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card p-3 text-center bg-warning text-dark">
+            <h1>{{ pending }}</h1>
+            <p>Pending</p>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card p-3 text-center bg-primary text-white">
+            <h1>{{ performance }}%</h1>
+            <p>Performance</p>
+        </div>
+    </div>
+
+</div>
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#practice">
+                Practice
+            </button>
         </li>
-    {% endfor %}
+
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#stats">
+                Statistics
+            </button>
+        </li>
+
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#activity">
+                Activity
+            </button>
+        </li>
 
     </ul>
 
-{% else %}
 
-    <p>No problems available yet.</p>
+    <div class="tab-content bg-white p-4 rounded-bottom shadow">
 
-{% endif %}
-```
+        <!-- Practice Tab -->
+        <div class="tab-pane fade show active" id="practice">
+
+            {% if problems %}
+
+            <ul class="list-group">
+
+                {% for p in problems %}
+                <li class="list-group-item problem-item d-flex justify-content-between align-items-center">
+
+                    <a href="/problem/{{ p[0] }}" class="text-decoration-none fw-semibold">
+                        {{ p[1] }}
+                    </a>
+
+                    <span class="badge bg-primary rounded-pill">
+                        Solve ➜
+                    </span>
+
+                </li>
+                {% endfor %}
+
+            </ul>
+
+            {% else %}
+            <p>No problems available yet.</p>
+            {% endif %}
+
+        </div>
+
+       
+        <!-- Stats Tab -->
+<div class="tab-pane fade" id="stats">
+    <h5>Your Performance Overview</h5>
+    <p>Total Problems: {{ problems|length }}</p>
+    <p>Solved: {{ solved }}</p>
+    <p>Pending: {{ pending }}</p>
+    <p>Performance: {{ performance }}%</p>
+</div>
+
+        <!-- Activity Tab -->
+        <div class="tab-pane fade" id="activity">
+            <h5>Recent Activity</h5>
+            <p>Coming Soon 🚀</p>
+        </div>
+
+    </div>
 
 </div>
+
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

@@ -308,3 +308,31 @@ textarea{
     font-family:monospace;
     resize:vertical;
 }
+/* Light Mode (Default) */
+body {
+    background: #f4f6f9;
+    color: black;
+}
+
+/* Dark Mode */
+body.dark {
+    background: #121212;
+    color: white;
+}
+
+/* Dark panel */
+body.dark .right-panel {
+    background: #1e1e1e;
+}
+
+/* Dark textarea */
+body.dark textarea {
+    background: #1e1e1e;
+    color: white;
+}
+
+/* Light textarea */
+textarea {
+    background: white;
+    color: black;
+}

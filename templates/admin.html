@@ -1,123 +1,233 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>Admin Panel</title>
-<link rel="stylesheet" href="/static/style.css">
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+    background: linear-gradient(135deg,#1e2a78,#4a6cf7);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.navbar{
+    background: linear-gradient(90deg,#0f2027,#203a43,#2c5364);
+}
+
+.card{
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+textarea{
+    resize: none;
+}
+</style>
 </head>
+
 <body>
 
-<div class="navbar">
-    <h2>👑 Admin Panel</h2>
-    <a href="/dashboard">
-        <button class="logout-btn">Back</button>
-    </a>
-</div>
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark shadow">
+    <div class="container">
+        <span class="navbar-brand fw-bold">
+            👑 Admin Panel
+        </span>
 
-<div class="practice-box">
+        <a href="/dashboard" class="btn btn-light btn-sm">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</nav>
+
+<div class="container my-5">
 
 {% if msg %}
-<p style="color:green; font-weight:bold;">
+<div class="alert alert-success">
     {{ msg }}
-</p>
+</div>
 {% endif %}
 
-<h2>Add New User</h2>
-
-<form method="POST">
-    <input name="new_user" placeholder="Username" required>
-    <input name="new_pass" type="password" placeholder="Password" required>
-    <button type="submit">Add User</button>
-</form>
-
-<hr>
-
-<h2>Add New Problem</h2>
-
-<form method="POST">
-
-<input name="title" placeholder="Problem Title" required><br><br>
-
-<textarea name="description"
-placeholder="Problem Description"
-style="width:100%; height:120px;"
-required></textarea><br><br>
-
-<h3>Test Cases</h3>
-
-<label>Test Case 1</label><br>
-<textarea name="input1"
-placeholder="Input Example:
-2
-3"
-style="width:48%; height:70px;"></textarea>
-
-<textarea name="output1"
-placeholder="Output Example:
-5"
-style="width:48%; height:70px;"></textarea><br><br>
-
-<label>Test Case 2</label><br>
-<textarea name="input2" style="width:48%; height:70px;"></textarea>
-<textarea name="output2" style="width:48%; height:70px;"></textarea><br><br>
-
-<label>Test Case 3</label><br>
-<textarea name="input3" style="width:48%; height:70px;"></textarea>
-<textarea name="output3" style="width:48%; height:70px;"></textarea><br><br>
-
-<label>Test Case 4</label><br>
-<textarea name="input4" style="width:48%; height:70px;"></textarea>
-<textarea name="output4" style="width:48%; height:70px;"></textarea><br><br>
-
-<label>Test Case 5</label><br>
-<textarea name="input5" style="width:48%; height:70px;"></textarea>
-<textarea name="output5" style="width:48%; height:70px;"></textarea><br><br>
-
-<button type="submit">Add Problem</button>
-
-</form>
-
-<hr>
-
-<h2>All Users</h2>
-
-<ul>
-{% for u in users %}
-    <li>
-        {{ u[0] }} ({{ u[1] }})
-
-        {% if u[0] != "admin" %}
-        <a href="/delete_user/{{ u[0] }}"
-           onclick="return confirm('Delete this user?')">
-            <button style="background:red; color:white;">
-                Delete
-            </button>
-        </a>
-        {% endif %}
+<!-- TABS -->
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#usersTab">
+            Users
+        </button>
     </li>
-{% endfor %}
+
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#problemTab">
+            Add Problem
+        </button>
+    </li>
+
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">
+            Manage Data
+        </button>
+    </li>
 </ul>
 
-<hr>
+<div class="tab-content">
 
-<h2>All Problems</h2>
+<!-- USERS TAB -->
+<div class="tab-pane fade show active" id="usersTab">
 
-<ul>
-{% for p in problems %}
-    <li>
-        {{ p[1] }}
+    <div class="card p-4 mb-4">
+        <h4>Add New User</h4>
 
-        <a href="/delete_problem/{{ p[0] }}"
-           onclick="return confirm('Delete this problem?')">
-            <button style="background:red; color:white;">
-                Delete
-            </button>
-        </a>
-    </li>
-{% endfor %}
-</ul>
+        <form method="POST">
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+                    <input name="new_user"
+                           class="form-control"
+                           placeholder="Username"
+                           required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <input name="new_pass"
+                           type="password"
+                           class="form-control"
+                           placeholder="Password"
+                           required>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <select name="role" class="form-control">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+                <div class="col-md-1 mb-3">
+                    <button class="btn btn-primary w-100">
+                        Add
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
 
 </div>
+
+
+<!-- ADD PROBLEM TAB -->
+<div class="tab-pane fade" id="problemTab">
+
+    <div class="card p-4">
+
+        <h4>Add New Problem</h4>
+
+        <form method="POST">
+
+            <div class="mb-3">
+                <input name="title"
+                       class="form-control"
+                       placeholder="Problem Title"
+                       required>
+            </div>
+
+            <div class="mb-3">
+                <textarea name="description"
+                          class="form-control"
+                          rows="4"
+                          placeholder="Problem Description"
+                          required></textarea>
+            </div>
+
+            <h5>Test Cases</h5>
+
+            {% for i in range(1,6) %}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <textarea name="input{{i}}"
+                              class="form-control"
+                              rows="3"
+                              placeholder="Input {{i}}"></textarea>
+                </div>
+
+                <div class="col-md-6">
+                    <textarea name="output{{i}}"
+                              class="form-control"
+                              rows="3"
+                              placeholder="Output {{i}}"></textarea>
+                </div>
+            </div>
+            {% endfor %}
+
+            <button class="btn btn-success">
+                Add Problem
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- MANAGE DATA TAB -->
+<div class="tab-pane fade" id="listTab">
+
+    <!-- USERS LIST -->
+    <div class="card p-4 mb-4">
+        <h4>All Users</h4>
+
+        <ul class="list-group">
+        {% for u in users %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ u[0] }} ({{ u[1] }})
+
+                {% if u[0] != "admin" %}
+                <a href="/delete_user/{{ u[0] }}"
+                   onclick="return confirm('Delete this user?')"
+                   class="btn btn-danger btn-sm">
+                    Delete
+                </a>
+                {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+
+    <!-- PROBLEMS LIST -->
+    <div class="card p-4">
+        <h4>All Problems</h4>
+
+        <ul class="list-group">
+        {% for p in problems %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ p[1] }}
+
+                <a href="/delete_problem/{{ p[0] }}"
+                   onclick="return confirm('Delete this problem?')"
+                   class="btn btn-danger btn-sm">
+                    Delete
+                </a>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
