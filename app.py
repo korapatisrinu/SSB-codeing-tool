@@ -129,20 +129,32 @@ def login():
     if request.method == "POST":
 
         username = request.form["username"]
-        password = request.form["password"].encode()
+        password = request.form["password"]
 
-        c.execute("SELECT password, role FROM users WHERE username=?", (username,))
-        row = c.fetchone()
+        import sqlite3
+        conn = sqlite3.connect("platform.db")
+        c = conn.cursor()
 
-        if row and bcrypt.checkpw(password, row[0]):
+        c.execute(
+            "SELECT * FROM users WHERE username=? AND password=?",
+            (username, password)
+        )
+
+        user = c.fetchone()
+
+        conn.close()
+
+        if user:
             session["user"] = username
-            session["role"] = row[1]
             return redirect("/dashboard")
 
-        return "Invalid Login"
+        else:
+            return render_template(
+                "login.html",
+                error="Incorrect username or password"
+            )
 
     return render_template("login.html")
-
 
 # =========================================================
 # DASHBOARD
