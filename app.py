@@ -256,7 +256,7 @@ def admin():
 
         username = request.form["new_user"]
         password = request.form["new_pass"]
-        role = request.form.get("role", "user")  # allow role selection
+        role = request.form.get("role", "user")
 
         hashed_pw = bcrypt.hashpw(
             password.encode(),
@@ -296,12 +296,30 @@ def admin():
         conn.commit()
         msg = "Problem added successfully"
 
-    # ================= FETCH DATA =================
+    # ================= FETCH USERS =================
     c.execute("SELECT username, role FROM users")
     users = c.fetchall()
 
+    # ================= FETCH PROBLEMS =================
     c.execute("SELECT * FROM problems")
     problems = c.fetchall()
+
+    # ================= USER STATISTICS =================
+    c.execute("""
+        SELECT 
+            u.username,
+            COUNT(DISTINCT CASE WHEN s.verdict='Accepted' THEN s.problem_id END) AS solved,
+            COUNT(s.id) AS submissions,
+            SUM(CASE WHEN s.verdict='Accepted' THEN 1 ELSE 0 END) AS accepted,
+            SUM(CASE WHEN s.verdict='Wrong Answer' THEN 1 ELSE 0 END) AS wrong
+        FROM users u
+        LEFT JOIN submissions s
+        ON u.username = s.username
+        GROUP BY u.username
+        ORDER BY solved DESC
+    """)
+
+    user_stats = c.fetchall()
 
     conn.close()
 
@@ -309,6 +327,7 @@ def admin():
         "admin.html",
         users=users,
         problems=problems,
+        user_stats=user_stats,
         msg=msg
     )
 # deleting promble
