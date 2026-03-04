@@ -229,7 +229,6 @@ box.style.display=(box.style.display==="none")?"block":"none";
 
 
 /* RUN CODE */
-
 function runCode(){
 
 const code = editor.getValue();
@@ -256,28 +255,39 @@ body:
 
 })
 
-.then(r=>r.text())
+.then(response => response.text())
 
-.then(d=>{
-
-let inputs = stdin.trim().split("\n");
+.then(data => {
 
 let display = "";
 
-for(let i=0;i<inputs.length;i++){
+if(stdin.trim() !== ""){
+display += "Input:\n";
+display += stdin + "\n\n";
+}
+
+/* detect compiler/runtime errors */
+
+if(data.toLowerCase().includes("error") ||
+   data.toLowerCase().includes("exception") ||
+   data.toLowerCase().includes("traceback")){
+
+display += "Error:\n" + data;
+
+}
+else{
+
+display += "Output:\n" + data;
 
 }
 
-terminal.innerText =
-display +
-"\nOutput:\n" +
-d;
+terminal.innerText = display;
 
 })
 
-.catch(err=>{
+.catch(err => {
 
-terminal.innerText = "Error:\n"+err;
+terminal.innerText = "Error:\n" + err;
 
 });
 

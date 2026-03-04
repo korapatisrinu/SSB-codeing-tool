@@ -164,14 +164,12 @@ color:white;
 
 <div class="d-flex gap-2">
 
-<!-- RESET USER PROGRESS -->
 <a href="/reset_user/{{ u[0] }}"
 onclick="return confirm('Reset solved problems for this user?')"
 class="btn btn-warning btn-sm">
 Reset
 </a>
 
-<!-- DELETE USER -->
 {% if u[0] != "admin" %}
 <a href="/delete_user/{{ u[0] }}"
 onclick="return confirm('Delete user?')"
@@ -237,11 +235,19 @@ required></textarea>
 
 <b>{{ p[1] }}</b>
 
+<div class="d-flex gap-2">
+
+<a href="/edit_problem/{{ p[0] }}" class="btn btn-warning btn-sm">
+Edit
+</a>
+
 <a href="/delete_problem/{{ p[0] }}"
 onclick="return confirm('Delete problem?')"
 class="btn btn-danger btn-sm">
 Delete
 </a>
+
+</div>
 
 </div>
 {% endfor %}

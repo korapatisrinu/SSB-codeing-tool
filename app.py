@@ -73,6 +73,7 @@ c.execute(
 )
 conn.commit()
 
+
 # =========================================================
 # CODE EXECUTION FUNCTION (MULTI LANGUAGE)
 # =========================================================
@@ -82,35 +83,40 @@ def run_code(language, code, input_data):
     try:
 
         if language == "python":
-            cmd = ["python", "-c", code]
 
-        elif language == "cpp":
-            with open("temp.cpp", "w") as f:
-                f.write(code)
-            subprocess.run(["g++", "temp.cpp", "-o", "temp"], check=True)
-            cmd = ["./temp"]
+            result = subprocess.run(
+                ["python", "-c", code],
+                input=input_data,
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+
+            return result.stdout.strip(), result.stderr.strip()
 
         elif language == "java":
+
             with open("Main.java", "w") as f:
                 f.write(code)
-            subprocess.run(["javac", "Main.java"], check=True)
-            cmd = ["java", "Main"]
 
-        elif language == "js":
-            cmd = ["node", "-e", code]
+            compile_process = subprocess.run(
+                ["javac", "Main.java"],
+                capture_output=True,
+                text=True
+            )
 
-        else:
-            return "", "Unsupported language"
+            if compile_process.returncode != 0:
+                return "", compile_process.stderr
 
-        result = subprocess.run(
-            cmd,
-            input=input_data,
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
+            run_process = subprocess.run(
+                ["java", "Main"],
+                input=input_data,
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
 
-        return result.stdout.strip(), result.stderr.strip()
+            return run_process.stdout.strip(), run_process.stderr.strip()
 
     except subprocess.TimeoutExpired:
         return "", "Time Limit Exceeded"
@@ -118,43 +124,41 @@ def run_code(language, code, input_data):
     except Exception as e:
         return "", str(e)
 
-
 # =========================================================
 # LOGIN
 # =========================================================
-
 @app.route("/", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
 
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form["username"].strip()
+        password = request.form["password"].strip().encode()
 
         import sqlite3
         conn = sqlite3.connect("platform.db")
         c = conn.cursor()
 
-        c.execute(
-            "SELECT * FROM users WHERE username=? AND password=?",
-            (username, password)
-        )
-
-        user = c.fetchone()
+        c.execute("SELECT password, role FROM users WHERE username=?", (username,))
+        row = c.fetchone()
 
         conn.close()
 
-        if user:
+        if row and bcrypt.checkpw(password, row[0]):
+
             session["user"] = username
+            session["role"] = row[1]
+
+            # ⭐ send both admin and user to dashboard
             return redirect("/dashboard")
 
-        else:
-            return render_template(
-                "login.html",
-                error="Incorrect username or password"
-            )
+        return render_template(
+            "login.html",
+            error="Incorrect username or password"
+        )
 
     return render_template("login.html")
+
 
 # =========================================================
 # DASHBOARD
@@ -377,6 +381,89 @@ def delete_user(username):
     conn.close()
 
     return redirect("/admin")
+# edit
+@app.route("/edit_problem/<int:pid>", methods=["GET","POST"])
+def edit_problem(pid):
+
+    if session.get("role") != "admin":
+        return "Access Denied"
+
+    conn = sqlite3.connect("platform.db")
+    c = conn.cursor()
+
+    if request.method == "POST":
+
+        title = request.form["title"]
+        description = request.form["description"]
+
+        c.execute(
+            "UPDATE problems SET title=?, description=? WHERE id=?",
+            (title, description, pid)
+        )
+
+        # delete old testcases
+        c.execute("DELETE FROM testcases WHERE problem_id=?", (pid,))
+
+        # insert updated testcases
+        for i in range(1,6):
+
+            inp = request.form.get(f"input{i}")
+            out = request.form.get(f"output{i}")
+
+            if inp and out:
+                c.execute(
+                    "INSERT INTO testcases(problem_id,input,output) VALUES(?,?,?)",
+                    (pid, inp, out)
+                )
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/admin")
+
+    # GET problem
+    c.execute("SELECT * FROM problems WHERE id=?", (pid,))
+    problem = c.fetchone()
+
+    # GET testcases
+    c.execute("SELECT input, output FROM testcases WHERE problem_id=?", (pid,))
+    tests = c.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "edit_problem.html",
+        problem=problem,
+        tests=tests
+    )
+# =========================================================
+# RESET USER PROGRESS
+# =========================================================
+@app.route("/reset_user/<username>")
+def reset_user(username):
+
+    if session.get("role") != "admin":
+        return "Access Denied"
+
+    conn = sqlite3.connect("platform.db")
+    c = conn.cursor()
+
+    # Delete solved problems
+    c.execute(
+        "DELETE FROM solved WHERE username=?",
+        (username,)
+    )
+
+    # Delete submission history
+    c.execute(
+        "DELETE FROM submissions WHERE username=?",
+        (username,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
 # =========================================================
 # PROBLEM PAGE
 # =========================================================
@@ -399,6 +486,7 @@ def problem(pid):
 # =========================================================
 # RUN — CUSTOM INPUT
 # =========================================================
+
 @app.route("/run", methods=["POST"])
 def run():
 
@@ -407,10 +495,16 @@ def run():
     stdin = request.form.get("stdin", "").strip()
     pid = request.form.get("pid")
 
+    import sqlite3
+    conn = sqlite3.connect("platform.db")
+    c = conn.cursor()
+
+    # If user did not give input → use sample input
     if stdin == "" and pid:
 
         c.execute("""
-            SELECT input FROM testcases
+            SELECT input
+            FROM testcases
             WHERE problem_id=? AND hidden=0
             ORDER BY id ASC
             LIMIT 1
@@ -421,43 +515,23 @@ def run():
         if row:
             stdin = row[0]
 
-    # 🔥 IMPORTANT FIX HERE
+    conn.close()
+
+    # Fix newline problems
     stdin = stdin.replace("\r\n", "\n").strip() + "\n"
 
+    # Run the code
     output, error = run_code(language, code, stdin)
 
+    # Show compiler/runtime error
     if error:
         return error
 
+    # Show program output
     return output
-# detering prombles  reset
-@app.route("/reset_user/<username>")
-def reset_user(username):
-
-    import sqlite3
-    conn = sqlite3.connect("platform.db")
-    cur = conn.cursor()
-
-    # delete solved problems
-    cur.execute(
-        "DELETE FROM solved WHERE username=?",
-        (username,)
-    )
-
-    # delete submission history
-    cur.execute(
-        "DELETE FROM submissions WHERE username=?",
-        (username,)
-    )
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/admin")
 # =========================================================
 # EXECUTE — SAMPLE TESTS
 # =========================================================
-
 @app.route("/execute/<int:pid>", methods=["POST"])
 def execute(pid):
 
@@ -480,17 +554,24 @@ def execute(pid):
 
         output, error = run_code(language, code, clean_input)
 
-        if output.strip() == expected.strip():
-            results += f"Test Case {i}: ✔ Passed\n"
+        results += f"Test Case {i}\n"
+        results += f"Input:\n{inp}\n"
+        results += f"Expected Output:\n{expected}\n"
+
+        if error:
+            results += f"Error:\n{error}\n"
+            results += "Result: ✖ Failed\n"
         else:
-            results += (
-                f"Test Case {i}: ✖ Failed\n"
-                f"Expected: {expected}\n"
-                f"Got: {output}\n\n"
-            )
+            results += f"Your Output:\n{output}\n"
+
+            if output.strip() == expected.strip():
+                results += "Result: ✔ Passed\n"
+            else:
+                results += "Result: ✖ Failed\n"
+
+        results += "-----------------------------\n"
 
     return results
-
 
 # =========================================================
 # SUBMIT — FINAL JUDGE
