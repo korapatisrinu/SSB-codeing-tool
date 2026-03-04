@@ -165,17 +165,15 @@ def dashboard():
 
     total_problems = len(problems)
 
-    # Get solved problem IDs (Accepted only)
-    c.execute("""
-        SELECT DISTINCT problem_id
-        FROM submissions
-        WHERE username = ? AND verdict = 'Accepted'
-    """, (username,))
+    # Get solved problems from solved table
+    c.execute(
+        "SELECT problem_id FROM solved WHERE username=?",
+        (username,)
+    )
 
     solved_ids = {row[0] for row in c.fetchall()}
 
-    # Count solved problems that actually exist
-    solved = sum(1 for p in problems if p[0] in solved_ids)
+    solved = len(solved_ids)
 
     pending = total_problems - solved
 
@@ -420,7 +418,30 @@ def run():
         return error
 
     return output
+# detering prombles  reset
+@app.route("/reset_user/<username>")
+def reset_user(username):
 
+    import sqlite3
+    conn = sqlite3.connect("platform.db")
+    cur = conn.cursor()
+
+    # delete solved problems
+    cur.execute(
+        "DELETE FROM solved WHERE username=?",
+        (username,)
+    )
+
+    # delete submission history
+    cur.execute(
+        "DELETE FROM submissions WHERE username=?",
+        (username,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
 # =========================================================
 # EXECUTE — SAMPLE TESTS
 # =========================================================
@@ -475,6 +496,7 @@ def submit(pid):
     code = request.form["code"]
     language = request.form.get("language", "python")
 
+    # Get test cases
     c.execute(
         "SELECT input, output FROM testcases WHERE problem_id=?",
         (pid,)
@@ -484,9 +506,11 @@ def submit(pid):
     passed = 0
     total = len(tests)
 
+    # Run each testcase
     for inp, expected in tests:
 
         clean_input = inp.replace("\r\n", "\n")
+
         if not clean_input.endswith("\n"):
             clean_input += "\n"
 
@@ -497,25 +521,43 @@ def submit(pid):
 
     verdict = "Accepted" if passed == total else "Wrong Answer"
 
+    # Save submission history
     c.execute("""
         INSERT INTO submissions(username, problem_id, code, language, verdict, passed, total)
         VALUES(?,?,?,?,?,?,?)
-    """, (session["user"], pid, code, language, verdict, passed, total))
+    """, (
+        session["user"],
+        pid,
+        code,
+        language,
+        verdict,
+        passed,
+        total
+    ))
+
+    # Save solved problem
+    if verdict == "Accepted":
+
+        c.execute("""
+            INSERT OR IGNORE INTO solved(username, problem_id)
+            VALUES (?,?)
+        """, (session["user"], pid))
+
 
     conn.commit()
 
-    # Get next problem
+    # Find next problem
     c.execute(
         "SELECT id FROM problems WHERE id > ? ORDER BY id ASC LIMIT 1",
         (pid,)
     )
+
     next_problem = c.fetchone()
     next_id = next_problem[0] if next_problem else "None"
 
     conn.close()
 
     return f"{verdict}|{passed}|{total}|{next_id}"
-
 # =========================================================
 # LOGOUT
 # =========================================================

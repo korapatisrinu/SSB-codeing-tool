@@ -1,233 +1,326 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
 <title>Admin Panel</title>
-
-<!-- Bootstrap -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<link rel="icon" href="/static/media/logo.jpeg">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
 <style>
+
 body{
-    background: linear-gradient(135deg,#1e2a78,#4a6cf7);
-    font-family: 'Segoe UI', sans-serif;
+margin:0;
+background:#0f172a;
+font-family:'Segoe UI',sans-serif;
+color:#e2e8f0;
 }
 
-.navbar{
-    background: linear-gradient(90deg,#0f2027,#203a43,#2c5364);
+/* SIDEBAR */
+
+.sidebar{
+width:240px;
+height:100vh;
+background:#1e293b;
+position:fixed;
+padding:25px 20px;
 }
 
-.card{
-    border-radius: 15px;
-    border: none;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+.sidebar a{
+display:block;
+color:#cbd5e1;
+text-decoration:none;
+margin-bottom:15px;
+padding:8px 10px;
+border-radius:6px;
+cursor:pointer;
 }
 
-textarea{
-    resize: none;
+.sidebar a:hover,
+.sidebar a.active{
+background:#334155;
 }
+
+/* MAIN */
+
+.main-content{
+margin-left:240px;
+padding:40px;
+}
+
+/* CARDS */
+
+.card-custom{
+background:#1e293b;
+border:1px solid #334155;
+border-radius:12px;
+padding:25px;
+margin-bottom:30px;
+}
+
+/* INPUT */
+
+input.form-control,
+textarea.form-control,
+select.form-control{
+background:#0f172a !important;
+color:#ffffff !important;
+border:1px solid #334155 !important;
+}
+
+input::placeholder,
+textarea::placeholder{
+color:#94a3b8 !important;
+}
+
+/* LIST */
+
+.list-item{
+padding:8px 0;
+border-bottom:1px solid #334155;
+}
+
+/* TABLE */
+
+table{
+color:white;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- NAVBAR -->
-<nav class="navbar navbar-expand-lg navbar-dark shadow">
-    <div class="container">
-        <span class="navbar-brand fw-bold">
-            👑 Admin Panel
-        </span>
+<!-- SIDEBAR -->
 
-        <a href="/dashboard" class="btn btn-light btn-sm">
-            <i class="bi bi-arrow-left"></i> Back
-        </a>
-    </div>
-</nav>
+<div class="sidebar">
 
-<div class="container my-5">
+<h4><b>Admin</b></h4>
+
+<a onclick="showSection('users',this)">Users</a>
+<a onclick="showSection('problems',this)">Problems</a>
+<a onclick="showSection('stats',this)">Statistics</a>
+
+<a href="/dashboard">Back to Site</a>
+
+</div>
+
+
+<!-- MAIN CONTENT -->
+
+<div class="main-content">
 
 {% if msg %}
 <div class="alert alert-success">
-    {{ msg }}
+{{ msg }}
 </div>
 {% endif %}
 
-<!-- TABS -->
-<ul class="nav nav-tabs mb-4">
-    <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#usersTab">
-            Users
-        </button>
-    </li>
 
-    <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#problemTab">
-            Add Problem
-        </button>
-    </li>
+<!-- USERS SECTION -->
 
-    <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#listTab">
-            Manage Data
-        </button>
-    </li>
-</ul>
+<div id="usersSection" class="card-custom" style="display:block;">
 
-<div class="tab-content">
+<h5>Add New User</h5>
 
-<!-- USERS TAB -->
-<div class="tab-pane fade show active" id="usersTab">
+<form method="POST">
 
-    <div class="card p-4 mb-4">
-        <h4>Add New User</h4>
+<div class="row">
 
-        <form method="POST">
-            <div class="row">
-
-                <div class="col-md-4 mb-3">
-                    <input name="new_user"
-                           class="form-control"
-                           placeholder="Username"
-                           required>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <input name="new_pass"
-                           type="password"
-                           class="form-control"
-                           placeholder="Password"
-                           required>
-                </div>
-
-                <div class="col-md-3 mb-3">
-                    <select name="role" class="form-control">
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-
-                <div class="col-md-1 mb-3">
-                    <button class="btn btn-primary w-100">
-                        Add
-                    </button>
-                </div>
-
-            </div>
-        </form>
-    </div>
-
+<div class="col-md-4 mb-3">
+<input name="new_user" class="form-control" placeholder="Username" required>
 </div>
 
-
-<!-- ADD PROBLEM TAB -->
-<div class="tab-pane fade" id="problemTab">
-
-    <div class="card p-4">
-
-        <h4>Add New Problem</h4>
-
-        <form method="POST">
-
-            <div class="mb-3">
-                <input name="title"
-                       class="form-control"
-                       placeholder="Problem Title"
-                       required>
-            </div>
-
-            <div class="mb-3">
-                <textarea name="description"
-                          class="form-control"
-                          rows="4"
-                          placeholder="Problem Description"
-                          required></textarea>
-            </div>
-
-            <h5>Test Cases</h5>
-
-            {% for i in range(1,6) %}
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <textarea name="input{{i}}"
-                              class="form-control"
-                              rows="3"
-                              placeholder="Input {{i}}"></textarea>
-                </div>
-
-                <div class="col-md-6">
-                    <textarea name="output{{i}}"
-                              class="form-control"
-                              rows="3"
-                              placeholder="Output {{i}}"></textarea>
-                </div>
-            </div>
-            {% endfor %}
-
-            <button class="btn btn-success">
-                Add Problem
-            </button>
-
-        </form>
-
-    </div>
-
+<div class="col-md-4 mb-3">
+<input name="new_pass" type="password" class="form-control" placeholder="Password" required>
 </div>
 
+<div class="col-md-3 mb-3">
+<select name="role" class="form-control">
+<option value="user">User</option>
+<option value="admin">Admin</option>
+</select>
+</div>
 
-<!-- MANAGE DATA TAB -->
-<div class="tab-pane fade" id="listTab">
-
-    <!-- USERS LIST -->
-    <div class="card p-4 mb-4">
-        <h4>All Users</h4>
-
-        <ul class="list-group">
-        {% for u in users %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ u[0] }} ({{ u[1] }})
-
-                {% if u[0] != "admin" %}
-                <a href="/delete_user/{{ u[0] }}"
-                   onclick="return confirm('Delete this user?')"
-                   class="btn btn-danger btn-sm">
-                    Delete
-                </a>
-                {% endif %}
-            </li>
-        {% endfor %}
-        </ul>
-    </div>
-
-    <!-- PROBLEMS LIST -->
-    <div class="card p-4">
-        <h4>All Problems</h4>
-
-        <ul class="list-group">
-        {% for p in problems %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ p[1] }}
-
-                <a href="/delete_problem/{{ p[0] }}"
-                   onclick="return confirm('Delete this problem?')"
-                   class="btn btn-danger btn-sm">
-                    Delete
-                </a>
-            </li>
-        {% endfor %}
-        </ul>
-    </div>
-
+<div class="col-md-1 mb-3">
+<button class="btn btn-primary w-100">Add</button>
 </div>
 
 </div>
 
+</form>
+
+<hr>
+
+<h6>All Users</h6>
+
+{% for u in users %}
+<div class="list-item d-flex justify-content-between align-items-center">
+
+<div>
+<b>{{ u[0] }}</b> ({{ u[1] }})
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<div class="d-flex gap-2">
+
+<!-- RESET USER PROGRESS -->
+<a href="/reset_user/{{ u[0] }}"
+onclick="return confirm('Reset solved problems for this user?')"
+class="btn btn-warning btn-sm">
+Reset
+</a>
+
+<!-- DELETE USER -->
+{% if u[0] != "admin" %}
+<a href="/delete_user/{{ u[0] }}"
+onclick="return confirm('Delete user?')"
+class="btn btn-danger btn-sm">
+Delete
+</a>
+{% endif %}
+
+</div>
+
+</div>
+{% endfor %}
+
+</div>
+
+
+
+<!-- PROBLEMS SECTION -->
+
+<div id="problemsSection" class="card-custom" style="display:none;">
+
+<h5>Add New Problem</h5>
+
+<form method="POST">
+
+<input name="title" class="form-control mb-3" placeholder="Problem Title" required>
+
+<textarea name="description"
+class="form-control mb-3"
+rows="4"
+placeholder="Problem Description"
+required></textarea>
+
+<h6>Test Cases</h6>
+
+{% for i in range(1,6) %}
+
+<div class="row mb-3">
+
+<div class="col-md-6">
+<textarea name="input{{i}}" class="form-control" rows="2" placeholder="Input {{i}}"></textarea>
+</div>
+
+<div class="col-md-6">
+<textarea name="output{{i}}" class="form-control" rows="2" placeholder="Output {{i}}"></textarea>
+</div>
+
+</div>
+
+{% endfor %}
+
+<button class="btn btn-success w-100">Add Problem</button>
+
+</form>
+
+
+<hr>
+
+<h6>Existing Problems</h6>
+
+{% for p in problems %}
+<div class="list-item d-flex justify-content-between align-items-center">
+
+<b>{{ p[1] }}</b>
+
+<a href="/delete_problem/{{ p[0] }}"
+onclick="return confirm('Delete problem?')"
+class="btn btn-danger btn-sm">
+Delete
+</a>
+
+</div>
+{% endfor %}
+
+</div>
+
+
+
+<!-- STATISTICS SECTION -->
+
+<div id="statsSection" class="card-custom" style="display:none;">
+
+<h5>User Statistics</h5>
+
+<table class="table table-bordered text-center">
+
+<thead class="table-dark">
+
+<tr>
+<th>Username</th>
+<th>Problems Solved</th>
+<th>Total Submissions</th>
+<th>Accepted</th>
+<th>Wrong Answers</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for u in user_stats %}
+
+<tr>
+
+<td>{{ u[0] }}</td>
+<td>{{ u[1] }}</td>
+<td>{{ u[2] }}</td>
+<td>{{ u[3] }}</td>
+<td>{{ u[4] }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+</div>
+
+
+<script>
+
+function showSection(section,element){
+
+document.querySelectorAll(".sidebar a").forEach(link=>{
+link.classList.remove("active")
+})
+
+if(element) element.classList.add("active")
+
+const users=document.getElementById("usersSection")
+const problems=document.getElementById("problemsSection")
+const stats=document.getElementById("statsSection")
+
+users.style.display="none"
+problems.style.display="none"
+stats.style.display="none"
+
+if(section==="users") users.style.display="block"
+if(section==="problems") problems.style.display="block"
+if(section==="stats") stats.style.display="block"
+
+}
+
+</script>
 
 </body>
 </html>
