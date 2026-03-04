@@ -1,123 +1,332 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <title>Admin Panel</title>
-<link rel="stylesheet" href="/static/style.css">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="icon" href="/static/media/logo.jpeg">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+body{
+margin:0;
+background:#0f172a;
+font-family:'Segoe UI',sans-serif;
+color:#e2e8f0;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:240px;
+height:100vh;
+background:#1e293b;
+position:fixed;
+padding:25px 20px;
+}
+
+.sidebar a{
+display:block;
+color:#cbd5e1;
+text-decoration:none;
+margin-bottom:15px;
+padding:8px 10px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.sidebar a:hover,
+.sidebar a.active{
+background:#334155;
+}
+
+/* MAIN */
+
+.main-content{
+margin-left:240px;
+padding:40px;
+}
+
+/* CARDS */
+
+.card-custom{
+background:#1e293b;
+border:1px solid #334155;
+border-radius:12px;
+padding:25px;
+margin-bottom:30px;
+}
+
+/* INPUT */
+
+input.form-control,
+textarea.form-control,
+select.form-control{
+background:#0f172a !important;
+color:#ffffff !important;
+border:1px solid #334155 !important;
+}
+
+input::placeholder,
+textarea::placeholder{
+color:#94a3b8 !important;
+}
+
+/* LIST */
+
+.list-item{
+padding:8px 0;
+border-bottom:1px solid #334155;
+}
+
+/* TABLE */
+
+table{
+color:white;
+}
+
+</style>
 </head>
+
 <body>
 
-<div class="navbar">
-    <h2>👑 Admin Panel</h2>
-    <a href="/dashboard">
-        <button class="logout-btn">Back</button>
-    </a>
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<h4><b>Admin</b></h4>
+
+<a onclick="showSection('users',this)">Users</a>
+<a onclick="showSection('problems',this)">Problems</a>
+<a onclick="showSection('stats',this)">Statistics</a>
+
+<a href="/dashboard">Back to Site</a>
+
 </div>
 
-<div class="practice-box">
+
+<!-- MAIN CONTENT -->
+
+<div class="main-content">
 
 {% if msg %}
-<p style="color:green; font-weight:bold;">
-    {{ msg }}
-</p>
+<div class="alert alert-success">
+{{ msg }}
+</div>
 {% endif %}
 
-<h2>Add New User</h2>
 
-<form method="POST">
-    <input name="new_user" placeholder="Username" required>
-    <input name="new_pass" type="password" placeholder="Password" required>
-    <button type="submit">Add User</button>
-</form>
+<!-- USERS SECTION -->
 
-<hr>
+<div id="usersSection" class="card-custom" style="display:block;">
 
-<h2>Add New Problem</h2>
+<h5>Add New User</h5>
 
 <form method="POST">
 
-<input name="title" placeholder="Problem Title" required><br><br>
+<div class="row">
 
-<textarea name="description"
-placeholder="Problem Description"
-style="width:100%; height:120px;"
-required></textarea><br><br>
+<div class="col-md-4 mb-3">
+<input name="new_user" class="form-control" placeholder="Username" required>
+</div>
 
-<h3>Test Cases</h3>
+<div class="col-md-4 mb-3">
+<input name="new_pass" type="password" class="form-control" placeholder="Password" required>
+</div>
 
-<label>Test Case 1</label><br>
-<textarea name="input1"
-placeholder="Input Example:
-2
-3"
-style="width:48%; height:70px;"></textarea>
+<div class="col-md-3 mb-3">
+<select name="role" class="form-control">
+<option value="user">User</option>
+<option value="admin">Admin</option>
+</select>
+</div>
 
-<textarea name="output1"
-placeholder="Output Example:
-5"
-style="width:48%; height:70px;"></textarea><br><br>
-
-<label>Test Case 2</label><br>
-<textarea name="input2" style="width:48%; height:70px;"></textarea>
-<textarea name="output2" style="width:48%; height:70px;"></textarea><br><br>
-
-<label>Test Case 3</label><br>
-<textarea name="input3" style="width:48%; height:70px;"></textarea>
-<textarea name="output3" style="width:48%; height:70px;"></textarea><br><br>
-
-<label>Test Case 4</label><br>
-<textarea name="input4" style="width:48%; height:70px;"></textarea>
-<textarea name="output4" style="width:48%; height:70px;"></textarea><br><br>
-
-<label>Test Case 5</label><br>
-<textarea name="input5" style="width:48%; height:70px;"></textarea>
-<textarea name="output5" style="width:48%; height:70px;"></textarea><br><br>
-
-<button type="submit">Add Problem</button>
-
-</form>
-
-<hr>
-
-<h2>All Users</h2>
-
-<ul>
-{% for u in users %}
-    <li>
-        {{ u[0] }} ({{ u[1] }})
-
-        {% if u[0] != "admin" %}
-        <a href="/delete_user/{{ u[0] }}"
-           onclick="return confirm('Delete this user?')">
-            <button style="background:red; color:white;">
-                Delete
-            </button>
-        </a>
-        {% endif %}
-    </li>
-{% endfor %}
-</ul>
-
-<hr>
-
-<h2>All Problems</h2>
-
-<ul>
-{% for p in problems %}
-    <li>
-        {{ p[1] }}
-
-        <a href="/delete_problem/{{ p[0] }}"
-           onclick="return confirm('Delete this problem?')">
-            <button style="background:red; color:white;">
-                Delete
-            </button>
-        </a>
-    </li>
-{% endfor %}
-</ul>
+<div class="col-md-1 mb-3">
+<button class="btn btn-primary w-100">Add</button>
+</div>
 
 </div>
+
+</form>
+
+<hr>
+
+<h6>All Users</h6>
+
+{% for u in users %}
+<div class="list-item d-flex justify-content-between align-items-center">
+
+<div>
+<b>{{ u[0] }}</b> ({{ u[1] }})
+</div>
+
+<div class="d-flex gap-2">
+
+<a href="/reset_user/{{ u[0] }}"
+onclick="return confirm('Reset solved problems for this user?')"
+class="btn btn-warning btn-sm">
+Reset
+</a>
+
+{% if u[0] != "admin" %}
+<a href="/delete_user/{{ u[0] }}"
+onclick="return confirm('Delete user?')"
+class="btn btn-danger btn-sm">
+Delete
+</a>
+{% endif %}
+
+</div>
+
+</div>
+{% endfor %}
+
+</div>
+
+
+
+<!-- PROBLEMS SECTION -->
+
+<div id="problemsSection" class="card-custom" style="display:none;">
+
+<h5>Add New Problem</h5>
+
+<form method="POST">
+
+<input name="title" class="form-control mb-3" placeholder="Problem Title" required>
+
+<textarea name="description"
+class="form-control mb-3"
+rows="4"
+placeholder="Problem Description"
+required></textarea>
+
+<h6>Test Cases</h6>
+
+{% for i in range(1,6) %}
+
+<div class="row mb-3">
+
+<div class="col-md-6">
+<textarea name="input{{i}}" class="form-control" rows="2" placeholder="Input {{i}}"></textarea>
+</div>
+
+<div class="col-md-6">
+<textarea name="output{{i}}" class="form-control" rows="2" placeholder="Output {{i}}"></textarea>
+</div>
+
+</div>
+
+{% endfor %}
+
+<button class="btn btn-success w-100">Add Problem</button>
+
+</form>
+
+
+<hr>
+
+<h6>Existing Problems</h6>
+
+{% for p in problems %}
+<div class="list-item d-flex justify-content-between align-items-center">
+
+<b>{{ p[1] }}</b>
+
+<div class="d-flex gap-2">
+
+<a href="/edit_problem/{{ p[0] }}" class="btn btn-warning btn-sm">
+Edit
+</a>
+
+<a href="/delete_problem/{{ p[0] }}"
+onclick="return confirm('Delete problem?')"
+class="btn btn-danger btn-sm">
+Delete
+</a>
+
+</div>
+
+</div>
+{% endfor %}
+
+</div>
+
+
+
+<!-- STATISTICS SECTION -->
+
+<div id="statsSection" class="card-custom" style="display:none;">
+
+<h5>User Statistics</h5>
+
+<table class="table table-bordered text-center">
+
+<thead class="table-dark">
+
+<tr>
+<th>Username</th>
+<th>Problems Solved</th>
+<th>Total Submissions</th>
+<th>Accepted</th>
+<th>Wrong Answers</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for u in user_stats %}
+
+<tr>
+
+<td>{{ u[0] }}</td>
+<td>{{ u[1] }}</td>
+<td>{{ u[2] }}</td>
+<td>{{ u[3] }}</td>
+<td>{{ u[4] }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+</div>
+
+
+<script>
+
+function showSection(section,element){
+
+document.querySelectorAll(".sidebar a").forEach(link=>{
+link.classList.remove("active")
+})
+
+if(element) element.classList.add("active")
+
+const users=document.getElementById("usersSection")
+const problems=document.getElementById("problemsSection")
+const stats=document.getElementById("statsSection")
+
+users.style.display="none"
+problems.style.display="none"
+stats.style.display="none"
+
+if(section==="users") users.style.display="block"
+if(section==="problems") problems.style.display="block"
+if(section==="stats") stats.style.display="block"
+
+}
+
+</script>
 
 </body>
 </html>

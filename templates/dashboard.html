@@ -1,119 +1,312 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
 <title>Dashboard — SSB Coding Platform</title>
-<link rel="stylesheet" href="/static/style.css">
+
+<link rel="icon" href="/static/media/logo.jpeg">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+html, body{
+height:100%;
+margin:0;
+font-family:'Segoe UI', sans-serif;
+color:#e5e7eb;
+display:flex;
+flex-direction:column;
+}
+
+/* ===== BACKGROUND VIDEO ===== */
+
+.bg-video{
+position:fixed;
+right:0;
+bottom:0;
+min-width:100%;
+min-height:100%;
+object-fit:cover;
+z-index:-2;
+}
+
+body::after{
+content:"";
+position:fixed;
+inset:0;
+background:rgba(15,23,42,0.75);
+z-index:-1;
+}
+
+/* ===== NAVBAR ===== */
+
+.navbar-custom{
+background:#1f2937;
+border-bottom:1px solid #2d3748;
+}
+
+.nav-btn{
+background:#2563EB;
+color:white;
+border:none;
+border-radius:6px;
+padding:6px 16px;
+}
+
+.nav-btn:hover{
+background:#1D4ED8;
+color:white;
+}
+
+/* ===== MAIN CONTENT ===== */
+
+.main-content{
+flex:1;
+padding-top:40px;
+padding-bottom:60px;
+}
+
+/* ===== CARD ===== */
+
+.card-custom{
+background:#1f2937;
+border-radius:12px;
+padding:28px;
+border:1px solid #2d3748;
+}
+
+/* ===== STATS ===== */
+
+.stat-number{
+font-size:2rem;
+font-weight:700;
+}
+
+/* ===== TABS ===== */
+
+.nav-tabs .nav-link{
+color:#e5e7eb;
+}
+
+.nav-tabs .nav-link.active{
+background:#2563EB;
+border:none;
+color:white;
+}
+
+/* ===== PROBLEM LIST ===== */
+
+.problem-item{
+border:1px solid #2d3748;
+border-radius:8px;
+padding:12px 18px;
+margin-bottom:10px;
+text-decoration:none;
+color:#e5e7eb;
+display:flex;
+justify-content:space-between;
+transition:0.2s ease;
+}
+
+.problem-item:hover{
+background:#2563EB;
+color:white;
+}
+
+/* ===== FOOTER ===== */
+
+footer{
+background:#1f2937;
+border-top:1px solid #2d3748;
+padding:14px 0;
+font-size:0.85rem;
+color:#9ca3af;
+}
+
+</style>
 </head>
+
 <body>
 
-<!-- ================= NAVBAR ================= -->
+<!-- BACKGROUND VIDEO -->
 
-<div class="navbar">
+<video autoplay muted loop playsinline class="bg-video">
+<source src="/static/media/P.mp4" type="video/mp4">
+</video>
 
-```
-<h2>🤖 SSB Coding Platform</h2>
+<!-- NAVBAR -->
 
-<div class="nav-actions">
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+<div class="container">
 
-    <!-- Admin Button -->
-    {% if session.get('role') == "admin" %}
-    <a href="/admin">
-        <button class="logout-btn">Admin</button>
-    </a>
-    {% endif %}
+<a class="navbar-brand d-flex align-items-center text-white fw-bold" href="/dashboard">
+<img src="/static/media/logo.jpeg"
+width="45"
+height="45"
+class="me-2 rounded-circle">
+SSB Coding Platform
+</a>
 
-    <!-- Contest Link -->
-    <a href="/contest/1">
-        <button class="logout-btn">Contest</button>
-    </a>
+<div class="ms-auto d-flex gap-2">
 
-    <!-- Logout -->
-    <a href="/logout">
-        <button class="logout-btn">Logout</button>
-    </a>
+{% if session.get('role') == "admin" %}
+<a href="/admin" class="btn nav-btn btn-sm">Admin</a>
+{% endif %}
 
-</div>
+<a href="/contest/1" class="btn nav-btn btn-sm">Contest</a>
 
-
-</div>
-
-<!-- ================= WELCOME ================= -->
-
-<div class="welcome-box">
-
-<h3>Hi {{ session.get('user') }} 👋</h3>
-
-<p>Let's Prepare, Practice and Perform!</p>
-
+<a href="/logout" class="btn btn-danger btn-sm">Logout</a>
 
 </div>
 
-<!-- ================= STATS ================= -->
-<div class="stats">
+</div>
+</nav>
 
-    <div class="card">
-        <h1>{{ problems|length }}</h1>
-        <p>Total Problems</p>
-    </div>
+<!-- MAIN CONTENT -->
 
-    <div class="card green">
-        <h1>{{ solved }}</h1>
-        <p>Problems Solved</p>
-    </div>
+<div class="main-content">
 
-    <div class="card orange">
-        <h1>{{ pending }}</h1>
-        <p>Pending</p>
-    </div>
+<!-- WELCOME -->
 
-    <div class="card blue">
-        <h1>{{ performance }}%</h1>
-        <p>Performance</p>
-    </div>
+<div class="container mb-4">
+<div class="card-custom text-center">
+<h5 class="text-white">Welcome, {{ session.get('user') }} 👋</h5>
+<small class="text-white">Let's Prepare, Practice and Perform</small>
+</div>
+</div>
+
+<!-- STATS -->
+
+<div class="container mb-4">
+
+<div class="row g-4">
+
+<div class="col-6 col-md-3">
+<div class="card-custom text-center">
+<div class="stat-number">{{ problems|length }}</div>
+<small>Total Problems</small>
+</div>
+</div>
+
+<div class="col-6 col-md-3">
+<div class="card-custom text-center">
+<div class="stat-number text-success">{{ solved }}</div>
+<small>Solved</small>
+</div>
+</div>
+
+<div class="col-6 col-md-3">
+<div class="card-custom text-center">
+<div class="stat-number text-warning">{{ pending }}</div>
+<small>Pending</small>
+</div>
+</div>
+
+<div class="col-6 col-md-3">
+<div class="card-custom text-center">
+<div class="stat-number text-info">{{ performance }}%</div>
+<small>Performance</small>
+</div>
+</div>
 
 </div>
 
-<!-- ================= PRACTICE PROBLEMS ================= -->
+</div>
 
-<div class="practice-box">
+<!-- TABS -->
 
-```
-<h2>Practice Problems</h2>
+<div class="container">
+
+<ul class="nav nav-tabs" role="tablist">
+
+<li class="nav-item">
+<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#practice">
+Practice
+</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#stats">
+Statistics
+</button>
+</li>
+
+<li class="nav-item">
+<button class="nav-link" data-bs-toggle="tab" data-bs-target="#activity">
+Activity
+</button>
+</li>
+
+</ul>
+
+<div class="tab-content card-custom rounded-bottom">
+
+<!-- PRACTICE -->
+
+<div class="tab-pane fade show active" id="practice">
+
+<h4 class="mb-3">Practice Problems</h4>
 
 {% if problems %}
 
-    <ul class="problem-list">
+{% for p in problems %}
 
-    {% for p in problems %}
-        <li class="problem-item">
+<a href="/problem/{{ p[0] }}" class="problem-item">
+<span>{{ p[1] }}</span>
+<span>→</span>
+</a>
 
-            <a href="/problem/{{ p[0] }}" class="problem-link">
-
-                <span class="problem-title">
-                    {{ p[1] }}
-                </span>
-
-                <span class="problem-arrow">
-                    ➜
-                </span>
-
-            </a>
-
-        </li>
-    {% endfor %}
-
-    </ul>
+{% endfor %}
 
 {% else %}
 
-    <p>No problems available yet.</p>
+<p class="text-muted">No problems available yet.</p>
 
 {% endif %}
-```
 
 </div>
+
+<!-- STATS -->
+
+<div class="tab-pane fade" id="stats">
+
+<h5>Your Performance Overview</h5>
+
+<p>Total Problems: {{ problems|length }}</p>
+<p>Solved: {{ solved }}</p>
+<p>Pending: {{ pending }}</p>
+<p>Performance: {{ performance }}%</p>
+
+</div>
+
+<!-- ACTIVITY -->
+
+<div class="tab-pane fade" id="activity">
+
+<h5>Recent Activity</h5>
+<p>Coming Soon 🚀</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- FOOTER -->
+
+<footer class="text-center">
+
+<small>
+© 2026 SSB Coding Platform. All rights reserved.
+</small>
+
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

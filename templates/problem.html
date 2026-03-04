@@ -1,171 +1,443 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+
 <title>{{ problem[1] }}</title>
-<link rel="stylesheet" href="/static/style.css">
+
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Monaco Editor -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Segoe UI;
+}
+
+/* NAVBAR */
+
+.navbar{
+background:#1e293b;
+}
+
+/* LEFT PANEL */
+
+.problem-box{
+background:#1e293b;
+padding:20px;
+border-radius:10px;
+height:80vh;
+overflow:auto;
+}
+
+/* RIGHT PANEL */
+
+.editor-box{
+background:#1e293b;
+padding:20px;
+border-radius:10px;
+}
+
+/* EDITOR */
+
+#editor{
+height:420px;
+border-radius:8px;
+}
+
+/* TERMINAL OUTPUT */
+
+.terminal{
+background:black;
+color:#00ff00;
+font-family:Consolas,monospace;
+padding:15px;
+border-radius:8px;
+height:200px;
+overflow-y:auto;
+border:1px solid #333;
+margin-top:10px;
+}
+
+#output{
+white-space:pre-wrap;
+}
+
+</style>
+
 </head>
+
 <body>
 
-<div class="navbar">
-    <h2>{{ problem[1] }}</h2>
-    <a href="/dashboard">
-        <button class="logout-btn" type="button">Back</button>
-    </a>
+<!-- NAVBAR -->
+
+<nav class="navbar navbar-dark px-4">
+
+<span class="navbar-brand fw-bold">
+{{ problem[1] }}
+</span>
+
+<a href="/dashboard" class="btn btn-danger btn-sm">
+Back
+</a>
+
+</nav>
+
+
+<div class="container-fluid mt-4">
+
+<div class="row g-4">
+
+<!-- LEFT SIDE : PROBLEM -->
+
+<div class="col-md-4">
+
+<div class="problem-box">
+
+<h4>📄 Problem</h4>
+
+<hr>
+
+<div style="white-space: pre-wrap;">
+{{ problem[2] }}
 </div>
 
-<div class="main">
+</div>
 
-    <!-- LEFT PANEL -->
+</div>
 
-    <div class="left-panel">
 
-        <h2>Problem</h2>
+<!-- RIGHT SIDE : EDITOR -->
 
-        <!-- ✅ This preserves formatting -->
-        <div style="white-space: pre-wrap;">
-            {{ problem[2] }}
-        </div>
+<div class="col-md-8">
 
-    </div>
+<div class="editor-box">
 
-    <!-- RIGHT PANEL -->
+<div class="d-flex justify-content-between align-items-center mb-3">
 
-    <div class="right-panel">
+<h4>💻 Code Editor</h4>
 
-        <h3>💻 Code Editor</h3>
+<select id="language"
+class="form-select w-auto"
+onchange="changeTemplate()">
 
-        <label><strong>Select Language:</strong></label>
-        <select id="language">
-            <option value="python">Python</option>
-            <option value="java">Java</option>
-        </select>
+<option value="python">Python 3</option>
+<option value="java">Java 17</option>
 
-        <textarea id="code" placeholder="Write your code here..."></textarea>
+</select>
 
-        <button type="button" onclick="toggleInput()">
-            Custom Input
-        </button>
+</div>
 
-        <div id="inputBox" style="display:none; margin-top:10px;">
-            <h4>Input (for Run)</h4>
-            <textarea id="stdin"
-            placeholder="Example:
+<!-- MONACO EDITOR -->
+
+<div id="editor"></div>
+
+
+<button class="btn btn-secondary mt-3"
+onclick="toggleInput()">
+Custom Input
+</button>
+
+
+<div id="inputBox" style="display:none;" class="mt-3">
+
+<h6>Input</h6>
+
+<textarea id="stdin"
+class="form-control"
+style="height:100px;"
+placeholder="Example:
 2
-3"
-            style="width:100%; height:100px;"></textarea>
-        </div>
-
-        <div class="buttons">
-            <button type="button" onclick="runCode()">▶ Run</button>
-            <button type="button" onclick="executeCode()">⚡ Execute</button>
-            <button type="button" onclick="submitCode()">🚀 Submit</button>
-        </div>
-
-        <h3>Output</h3>
-
-        <textarea id="output"
-        readonly
-        style="width:100%; height:160px; background:black; color:lime;"></textarea>
-
-    </div>
+3"></textarea>
 
 </div>
+
+
+<!-- BUTTONS -->
+
+<div class="mt-3 d-flex gap-2">
+
+<button class="btn btn-warning"
+onclick="runCode()">▶ Run</button>
+
+<button class="btn btn-info"
+onclick="executeCode()">⚡ Execute</button>
+
+<button class="btn btn-success"
+onclick="submitCode()">🚀 Submit</button>
+
+</div>
+
+
+<h5 class="mt-4">Terminal Output</h5>
+
+<div class="terminal">
+<div id="output"></div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
 
 <script>
 
+let editor;
+
+/* MONACO EDITOR */
+
+require.config({
+paths:{'vs':'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs'}
+});
+
+require(['vs/editor/editor.main'], function () {
+
+editor = monaco.editor.create(document.getElementById('editor'), {
+
+value:"",
+language:"python",
+theme:"vs-dark",
+fontSize:14,
+minimap:{enabled:false},
+automaticLayout:true
+
+});
+
+changeTemplate();
+
+});
+
+
 function toggleInput(){
-    const box = document.getElementById("inputBox");
-    box.style.display = (box.style.display === "none") ? "block" : "none";
+
+const box=document.getElementById("inputBox");
+
+box.style.display=(box.style.display==="none")?"block":"none";
+
 }
 
+
+/* RUN CODE */
 function runCode(){
-    const code = document.getElementById("code").value;
-    const stdin = document.getElementById("stdin").value;
-    const language = document.getElementById("language").value;
 
-    document.getElementById("output").value = "Running...";
+const code = editor.getValue();
+const stdin = document.getElementById("stdin").value;
+const language = document.getElementById("language").value;
 
-    fetch("/run", {
-        method: "POST",
-        headers: {"Content-Type":"application/x-www-form-urlencoded"},
-        body:
-            "code=" + encodeURIComponent(code)
-            + "&stdin=" + encodeURIComponent(stdin)
-            + "&language=" + encodeURIComponent(language)
-    })
-    .then(r => r.text())
-    .then(d => document.getElementById("output").value = d)
-    .catch(err => document.getElementById("output").value = err);
+let terminal = document.getElementById("output");
+
+terminal.innerText = "$ Running...\n\n";
+
+fetch("/run",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/x-www-form-urlencoded"
+},
+
+body:
+"code="+encodeURIComponent(code)
++"&stdin="+encodeURIComponent(stdin)
++"&language="+encodeURIComponent(language)
++"&pid={{ problem[0] }}"
+
+})
+
+.then(response => response.text())
+
+.then(data => {
+
+let display = "";
+
+if(stdin.trim() !== ""){
+display += "Input:\n";
+display += stdin + "\n\n";
 }
+
+/* detect compiler/runtime errors */
+
+if(data.toLowerCase().includes("error") ||
+   data.toLowerCase().includes("exception") ||
+   data.toLowerCase().includes("traceback")){
+
+display += "Error:\n" + data;
+
+}
+else{
+
+display += "Output:\n" + data;
+
+}
+
+terminal.innerText = display;
+
+})
+
+.catch(err => {
+
+terminal.innerText = "Error:\n" + err;
+
+});
+
+}
+/* EXECUTE */
 
 function executeCode(){
-    const code = document.getElementById("code").value;
-    const language = document.getElementById("language").value;
 
-    document.getElementById("output").value = "Executing test cases...";
+const code=editor.getValue();
+const language=document.getElementById("language").value;
 
-    fetch("/execute/{{ problem[0] }}", {
-        method:"POST",
-        headers: {"Content-Type":"application/x-www-form-urlencoded"},
-        body:
-            "code=" + encodeURIComponent(code)
-            + "&language=" + encodeURIComponent(language)
-    })
-    .then(r=>r.text())
-    .then(d=>document.getElementById("output").value = d)
-    .catch(err=>document.getElementById("output").value = err);
+document.getElementById("output").innerText="Executing test cases...\n";
+
+fetch("/execute/{{ problem[0] }}",{
+
+method:"POST",
+headers:{"Content-Type":"application/x-www-form-urlencoded"},
+
+body:
+"code="+encodeURIComponent(code)
++"&language="+encodeURIComponent(language)
+
+})
+.then(r=>r.text())
+.then(d=>document.getElementById("output").innerText=d);
+
 }
 
-function submitCode() {
-    const code = document.getElementById("code").value;
-    const language = document.getElementById("language").value;
 
-    document.getElementById("output").value = "Submitting...";
+/* SUBMIT */
+function submitCode(){
 
-    fetch("/submit/{{ problem[0] }}", {
-        method: "POST",
-        headers: {"Content-Type": "application/x-www-form-urlencoded"},
-        body:
-            "code=" + encodeURIComponent(code)
-            + "&language=" + encodeURIComponent(language)
-    })
-    .then(response => response.text())
-    .then(data => {
+const code = editor.getValue();
+const language = document.getElementById("language").value;
 
-        const parts = data.split("|");
+document.getElementById("output").innerText = "Submitting...\n";
 
-        const verdict = parts[0];
-        const passed = parts[1];
-        const total = parts[2];
-        const nextId = parts[3];
+fetch("/submit/{{ problem[0] }}",{
 
-        document.getElementById("output").value =
-            verdict + " — " + passed + "/" + total + " Passed";
+method:"POST",
+headers:{"Content-Type":"application/x-www-form-urlencoded"},
 
-        const oldBtn = document.getElementById("nextBtn");
-        if (oldBtn) oldBtn.remove();
+body:
+"code="+encodeURIComponent(code)
++"&language="+encodeURIComponent(language)
 
-        if (verdict === "Accepted" && nextId && nextId !== "None") {
+})
+.then(response=>response.text())
 
-            const nextBtn = document.createElement("button");
+.then(data=>{
 
-            nextBtn.id = "nextBtn";
-            nextBtn.innerText = "➡ Next Problem";
-            nextBtn.className = "logout-btn";
-            nextBtn.style.marginTop = "12px";
+const parts = data.split("|");
 
-            nextBtn.onclick = function() {
-                window.location.href = "/problem/" + nextId;
-            };
+const verdict = parts[0];
+const passed = parts[1];
+const total = parts[2];
+const nextId = parts[3];
 
-            document.querySelector(".right-panel").appendChild(nextBtn);
-        }
+document.getElementById("output").innerText =
+verdict+" — "+passed+"/"+total+" Passed";
 
-    })
-    .catch(error => {
-        document.getElementById("output").value = "Error: " + error;
-    });
+const oldBtn = document.getElementById("nextBtn");
+const oldDash = document.getElementById("dashBtn");
+
+if(oldBtn) oldBtn.remove();
+if(oldDash) oldDash.remove();
+
+/* NEXT PROBLEM BUTTON */
+
+if(verdict==="Accepted" && nextId && nextId!=="None"){
+
+const nextBtn = document.createElement("button");
+
+nextBtn.id="nextBtn";
+nextBtn.innerText="➡ Next Problem";
+nextBtn.className="btn btn-primary mt-3";
+
+nextBtn.onclick=function(){
+window.location.href="/problem/"+nextId;
+};
+
+document.querySelector(".editor-box").appendChild(nextBtn);
+
+}
+
+/* DASHBOARD BUTTON */
+
+if(verdict==="Accepted" && (!nextId || nextId==="None")){
+
+const dashBtn = document.createElement("button");
+
+dashBtn.id="dashBtn";
+dashBtn.innerText="🏠 Back to Dashboard";
+dashBtn.className="btn btn-success mt-3";
+
+dashBtn.onclick=function(){
+window.location.href="/dashboard";
+};
+
+document.querySelector(".editor-box").appendChild(dashBtn);
+
+}
+
+})
+
+.catch(error=>{
+
+document.getElementById("output").innerText="Error: "+error;
+
+});
+
+}
+/* LANGUAGE TEMPLATE */
+
+function changeTemplate(){
+
+const lang=document.getElementById("language").value;
+
+const model=editor.getModel();
+
+if(lang==="python"){
+
+monaco.editor.setModelLanguage(model,"python");
+
+editor.setValue(`# Enter your code here. Read input from STDIN. Print output to STDOUT
+
+# Write your logic here
+`);
+
+}
+
+else if(lang==="java"){
+
+monaco.editor.setModelLanguage(model,"java");
+
+editor.setValue(`import java.util.*;
+
+public class Main {
+
+public static void main(String[] args){
+
+Scanner sc=new Scanner(System.in);
+
+// Write your logic here
+
+}
+
+}`);
+}
+
 }
 
 </script>
